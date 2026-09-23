@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl shadow-slate-200/60 border border-slate-100 relative overflow-hidden">
+        <div class="relative">
+            <div class="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-brand-100">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+            </div>
+            
+            <h2 class="text-4xl font-bold font-display text-slate-900 mb-2">Create New Department</h2>
+            <p class="text-slate-500 mb-10 font-medium">Define a new municipal department for issue assignment.</p>
+            
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                {% for field in form %}
+                    {% include 'components/input_field.html' with field=field %}
+                {% endfor %}
+                
+                <div class="pt-4 flex gap-4">
+                    <button type="submit" class="flex-grow bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-brand-100 active:scale-[0.98]">
+                        Create Department
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="px-8 py-4 rounded-2xl font-bold text-lg text-slate-500 hover:bg-slate-50 transition-all">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

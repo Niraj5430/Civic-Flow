@@ -1,0 +1,35 @@
+{% if status|lower == 'reported' %}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-50 text-red-600 ring-1 ring-inset ring-red-600/10">
+        <span class="w-1 h-1 rounded-full bg-red-600 mr-1.5"></span>
+        {{ text|default:status }}
+    </span>
+{% elif status|lower == 'assigned' %}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-600/10">
+        <span class="w-1 h-1 rounded-full bg-blue-600 mr-1.5"></span>
+        {{ text|default:status }}
+    </span>
+{% elif status|lower == 'in_progress' or status|lower == 'in progress' %}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-600/10">
+        <span class="w-1 h-1 rounded-full bg-amber-600 mr-1.5"></span>
+        {{ text|default:status }}
+    </span>
+{% elif status|lower == 'completed' %}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-600/10">
+        <span class="w-1 h-1 rounded-full bg-blue-600 mr-1.5"></span>
+        {{ text|default:status }}
+    </span>
+{% elif status|lower == 'resolved' %}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-600/10">
+        <span class="w-1 h-1 rounded-full bg-emerald-600 mr-1.5"></span>
+        {{ text|default:status }}
+    </span>
+{% elif status|lower == 'rejected' %}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-600/10">
+        <span class="w-1 h-1 rounded-full bg-slate-600 mr-1.5"></span>
+        {{ text|default:status }}
+    </span>
+{% else %}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-500/10">
+        {{ text|default:status }}
+    </span>
+{% endif %}

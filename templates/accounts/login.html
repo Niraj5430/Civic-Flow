@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto py-12 md:py-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl shadow-slate-200/60 border border-slate-100 relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-brand-50 rounded-full blur-3xl opacity-60"></div>
+        
+        <div class="relative">
+            <div class="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-brand-100">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            </div>
+            
+            <h2 class="text-4xl font-bold font-display text-slate-900 mb-2">Welcome Back</h2>
+            <p class="text-slate-500 mb-8 font-medium">Login to access your CivicFlow dashboard.</p>
+
+            <form method="post" action="{% url 'login' %}" class="space-y-5">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Username</label>
+                    <input type="text" name="username" value="{{ username|default:'' }}" required
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                        placeholder="Enter your username">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Password</label>
+                    <div class="relative">
+                        <input id="loginPassword" type="password" name="password" required
+                            class="w-full pr-12 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                            placeholder="Enter your password">
+                        <button type="button" class="password-toggle absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors" aria-label="Toggle password visibility" data-target="loginPassword">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+                        </button>
+                    </div>
+                    <div class="text-right mt-2">
+                        <a href="{% url 'password_reset' %}" class="text-sm font-semibold text-brand-600 hover:text-brand-700">Forgot password?</a>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-brand-100 active:scale-[0.98]">
+                        Sign In
+                    </button>
+                </div>
+            </form>
+            <script>
+                document.querySelectorAll('.password-toggle').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const targetId = button.dataset.target;
+                        const input = document.getElementById(targetId);
+                        if (!input) return;
+                        const isPassword = input.type === 'password';
+                        input.type = isPassword ? 'text' : 'password';
+                        button.querySelector('svg').innerHTML = isPassword
+                            ? '<path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.056 10.056 0 012.223-3.358m1.987-1.847A9.969 9.969 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.983 9.983 0 01-4.71 5.835" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>'
+                            : '<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>';
+                    });
+                });
+            </script>
+            
+            <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                <p class="text-slate-500 text-sm font-medium">
+                    Don't have an account? 
+                    <a href="{% url 'register' %}" class="text-brand-600 font-bold hover:text-brand-700 hover:underline underline-offset-4 ml-1">Create one</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

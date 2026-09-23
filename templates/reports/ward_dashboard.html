@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 gap-6">
+        <div>
+            <h1 class="text-4xl font-bold font-display text-slate-900 tracking-tight">Department Dashboard</h1>
+            <p class="text-slate-500 font-medium mt-1">Issues assigned to {{ request.user.profile.department.name|default:"your department" }}.</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <form id="deptStatusFilterForm" method="get" class="relative">
+                <input type="hidden" name="status" id="statusInput" value="{{ status_filter }}">
+                <button type="button" id="statusDropdownButton" aria-haspopup="listbox" aria-expanded="false" class="inline-flex items-center justify-between rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none">
+                    <span id="statusDropdownLabel">{% if status_filter %}{% for val,label in status_choices %}{% if status_filter == val %}{{ label }}{% endif %}{% endfor %}{% else %}All Statuses{% endif %}</span>
+                    <svg class="ml-3 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="statusDropdownMenu" class="hidden absolute left-0 top-full z-50 mt-2 min-w-[210px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+                    <button type="button" data-value="" class="w-full px-4 py-3 text-left text-sm text-slate-700 transition-all hover:bg-slate-50 {% if not status_filter %}bg-slate-100 font-semibold{% endif %}">All Statuses</button>
+                    {% for val,label in status_choices %}
+                    <button type="button" data-value="{{ val }}" class="w-full px-4 py-3 text-left text-sm text-slate-700 transition-all hover:bg-slate-50 {% if status_filter == val %}bg-slate-100 font-semibold{% endif %}">{{ label }}</button>
+                    {% endfor %}
+                </div>
+            </form>
+
+            <div class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 shadow-sm overflow-hidden">
+                <button type="button" id="gridToggle" class="px-3 py-2 text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Grid view">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
+                </button>
+                <button type="button" id="tableToggle" class="px-3 py-2 text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Table view">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+            </div>
+
+            <div class="px-6 py-3 bg-brand-50 rounded-2xl border border-brand-100">
+                <p class="text-[10px] font-black text-brand-400 uppercase tracking-widest mb-0.5">Your Department</p>
+                <p class="text-brand-900 font-bold text-sm">{{ request.user.profile.department.name|default:"Unassigned" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for issue in issues %}
+            {% include 'components/card.html' with title=issue.title description=issue.description image=issue.image_before_url badge_text=issue.get_status_display badge_status=issue.status footer_left=issue.location link=issue.get_absolute_url link_text="View Task" extra_class="animate-in fade-in fill-mode-both"|add:" duration-500" %}
+        {% endfor %}
+    </div>
+
+    <div id="table-view" class="hidden overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Title</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Location</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Created</th>
+                        <th class="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-500">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for issue in issues %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-4 text-sm text-slate-700 font-medium"><a href="{{ issue.get_absolute_url }}" class="hover:text-brand-600">{{ issue.title }}</a></td>
+                        <td class="px-6 py-4 text-sm font-bold uppercase text-slate-600">{{ issue.get_status_display }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500">{{ issue.location|truncatechars:30 }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500">{{ issue.created_at|date:'M d, Y' }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{{ issue.get_absolute_url }}" class="text-brand-600 font-bold hover:underline">Manage</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if not issues %}
+    <div class="bg-white rounded-[3rem] p-16 md:p-24 text-center border border-slate-100 shadow-sm relative overflow-hidden">
+        <div class="w-24 h-24 bg-brand-50 text-brand-500 flex items-center justify-center rounded-3xl mx-auto mb-10">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h2 class="text-3xl font-bold font-display text-slate-900 mb-4">No Tasks Found</h2>
+        <p class="text-slate-500 font-medium text-lg italic">No issues match the selected status. Try clearing the filter or check back later.</p>
+    </div>
+    {% endif %}
+
+    <script>
+        const gridToggle = document.getElementById('gridToggle');
+        const tableToggle = document.getElementById('tableToggle');
+        const gridView = document.getElementById('grid-view');
+        const tableView = document.getElementById('table-view');
+
+        function setDashboardView(view) {
+            const isTable = view === 'table';
+            gridView.classList.toggle('hidden', isTable);
+            tableView.classList.toggle('hidden', !isTable);
+            gridToggle.classList.toggle('bg-slate-900', !isTable);
+            gridToggle.classList.toggle('text-white', !isTable);
+            gridToggle.classList.toggle('bg-slate-50', isTable);
+            gridToggle.classList.toggle('text-slate-500', isTable);
+            tableToggle.classList.toggle('bg-slate-900', isTable);
+            tableToggle.classList.toggle('text-white', isTable);
+            tableToggle.classList.toggle('bg-slate-50', !isTable);
+            tableToggle.classList.toggle('text-slate-500', !isTable);
+            localStorage.setItem('deptDashboardView', view);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedView = localStorage.getItem('deptDashboardView') || 'grid';
+            setDashboardView(savedView);
+
+            const statusButton = document.getElementById('statusDropdownButton');
+            const statusMenu = document.getElementById('statusDropdownMenu');
+            const statusInput = document.getElementById('statusInput');
+            const statusLabel = document.getElementById('statusDropdownLabel');
+            const statusOptions = statusMenu.querySelectorAll('button[data-value]');
+
+            if (statusButton && statusMenu) {
+                statusButton.addEventListener('click', () => {
+                    const isHidden = statusMenu.classList.contains('hidden');
+                    statusMenu.classList.toggle('hidden', !isHidden);
+                    statusButton.setAttribute('aria-expanded', String(isHidden));
+                });
+
+                statusOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        statusInput.value = option.dataset.value;
+                        statusLabel.textContent = option.textContent.trim();
+                        document.getElementById('deptStatusFilterForm').submit();
+                    });
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (!statusButton.contains(event.target) && !statusMenu.contains(event.target)) {
+                        statusMenu.classList.add('hidden');
+                        statusButton.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+
+            if (gridToggle && tableToggle) {
+                gridToggle.addEventListener('click', () => setDashboardView('grid'));
+                tableToggle.addEventListener('click', () => setDashboardView('table'));
+            }
+        });
+    </script>
+</div>
+{% endblock %}

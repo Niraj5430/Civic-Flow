@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicFlow | Better Cities, Together</title>
+    
+    <!-- Tailwind CSS: We use the CDN for rapid development and styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter for UI text and Outfit for headings to give a premium look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Config: Defining our custom 'brand' color (Blue) and Fonts -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom styles for subtle UI refinements -->
+    <style>
+        body { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900 flex flex-col min-h-screen">
+    
+    <!-- The Navigation Bar: Handled in a separate file for cleanliness -->
+    {% include 'navbar.html' %}
+
+    <main class="flex-grow">
+        <!-- Message Alerts: This loop shows notifications like "Login Successful" or "Form Errors" -->
+        {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-2" id="messages-container">
+            {% for message in messages %}
+                {% include 'components/alert.html' with type=message.tags message=message %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Main Content Area: Other templates 'fill' this space using the content block -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="bg-white border-t border-slate-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <span class="text-xl font-bold font-display text-slate-900">CivicFlow</span>
+                    <p class="text-slate-500 text-sm mt-2">Empowering communities through transparent infrastructure reporting.</p>
+                </div>
+                
+            </div>
+            <div class="mt-8 pt-8 border-t border-slate-100 text-center text-slate-400 text-xs">
+                &copy; 2026 CivicFlow. Built for the community.
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}
+    <script>
+        // MOBILE MENU: Opens/Closes the navigation on phones.
+        const btn = document.getElementById('mobile-menu-toggle');
+        const menu = document.getElementById('mobile-menu');
+        
+        if (btn && menu) {
+            btn.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+                btn.querySelector('svg').classList.toggle('rotate-90');
+            });
+        }
+
+        // IMAGE PREVIEW: Shows the selected photo instantly before the user hits 'Submit'.
+        function previewImage(input) {
+            const file = input.files[0];
+            const container = input.closest('label');
+            const previewImg = container.querySelector('.preview-container img');
+            const previewContainer = container.querySelector('.preview-container');
+            const uploadContent = container.querySelector('div:not(.preview-container)');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    if (uploadContent) uploadContent.classList.add('opacity-0');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // REMOVE PREVIEW: Clears the selected file if the user clicks the 'X' button.
+        function removePreview(btn, event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const container = btn.closest('label');
+            const input = container.querySelector('input');
+            const previewContainer = container.querySelector('.preview-container');
+            const uploadContent = container.querySelector('div:not(.preview-container)');
+            
+            input.value = '';
+            previewContainer.classList.add('hidden');
+            if (uploadContent) uploadContent.classList.remove('opacity-0');
+        }
+
+        // LOADING STATE: Prevents double-clicks and shows a 'Processing...' spinner on every form.
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+                    submitBtn.innerHTML = `
+                        <svg class="animate-spin h-5 w-5 mr-3 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                    `;
+                }
+            });
+        });
+    </script>
+    {% endblock %}
+</body>
+</html>

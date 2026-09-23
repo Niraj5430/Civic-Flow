@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 gap-6">
+        <div>
+            <h1 class="text-4xl font-bold font-display text-slate-900 tracking-tight">Municipal Corporation Dashboard</h1>
+            <p class="text-slate-500 font-medium mt-1">Review, assign, and verify all reported issues.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <a href="{% url 'create_ward' %}" class="bg-slate-900 text-white hover:bg-slate-800 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-slate-200 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                Add Department
+            </a>
+            <form id="departmentFilterForm" method="get" class="relative flex items-center gap-3">
+                <input type="hidden" name="status" value="{{ request.GET.status }}">
+                <input type="hidden" name="q" value="{{ query|default:'' }}">
+                <input type="hidden" id="departmentInput" name="department" value="{{ dept_filter }}">
+                <button type="button" id="departmentDropdownButton" aria-haspopup="listbox" aria-expanded="false" class="inline-flex items-center justify-between rounded-3xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none">
+                    <span id="departmentDropdownLabel">{% if dept_filter %}{% for dept in departments %}{% if dept_filter == dept.pk|stringformat:"s" %}{{ dept.name }}{% endif %}{% endfor %}{% else %}All Departments{% endif %}</span>
+                    <svg class="ml-3 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="departmentDropdownMenu" class="hidden absolute right-0 top-full z-50 mt-2 min-w-[220px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+                    <button type="button" data-value="" class="w-full px-4 py-3 text-left text-sm text-slate-700 transition-all hover:bg-slate-50 {% if not dept_filter %}bg-slate-100 font-semibold{% endif %}">All Departments</button>
+                    {% for dept in departments %}
+                    <button type="button" data-value="{{ dept.pk }}" class="w-full px-4 py-3 text-left text-sm text-slate-700 transition-all hover:bg-slate-50 {% if dept_filter == dept.pk|stringformat:"s" %}bg-slate-100 font-semibold{% endif %}">{{ dept.name }}</button>
+                    {% endfor %}
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Reported</p>
+            <div class="flex items-end gap-2">
+                <span class="text-3xl font-black text-slate-900 leading-none">{{ stats.reported }}</span>
+                <span class="text-xs font-bold text-slate-400 mb-0.5 whitespace-nowrap">New Issues</span>
+            </div>
+        </div>
+        <div class="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 shadow-sm">
+            <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">In Progress</p>
+            <div class="flex items-end gap-2">
+                <span class="text-3xl font-black text-amber-700 leading-none">{{ stats.in_progress }}</span>
+                <span class="text-xs font-bold text-amber-500 mb-0.5 whitespace-nowrap">Active Fixes</span>
+            </div>
+        </div>
+        <div class="bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100 shadow-sm">
+            <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Completed</p>
+            <div class="flex items-end gap-2">
+                <span class="text-3xl font-black text-indigo-700 leading-none">{{ stats.completed }}</span>
+                <span class="text-xs font-bold text-indigo-500 mb-0.5 whitespace-nowrap">Awaiting View</span>
+            </div>
+        </div>
+        <div class="bg-emerald-50 p-6 rounded-[2rem] border border-emerald-100 shadow-sm">
+            <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Resolved</p>
+            <div class="flex items-end gap-2">
+                <span class="text-3xl font-black text-emerald-700 leading-none">{{ stats.resolved }}</span>
+                <span class="text-xs font-bold text-emerald-500 mb-0.5 whitespace-nowrap">Total Success</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm mb-10">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-wrap gap-2">
+                <a href="?status={% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}" class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all {% if not request.GET.status %}bg-slate-900 text-white shadow-lg shadow-slate-200{% else %}bg-slate-50 text-slate-500 hover:bg-slate-100{% endif %}">All</a>
+                {% for val, label in status_choices %}
+                <a href="?status={{ val }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}" class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all {% if request.GET.status == val %}bg-slate-900 text-white shadow-lg shadow-slate-200{% else %}bg-slate-50 text-slate-500 hover:bg-slate-100{% endif %}">{{ label }}</a>
+                {% endfor %}
+            </div>
+
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-end w-full lg:w-auto">
+                <form method="get" class="relative w-full md:w-52">
+                    <input type="hidden" name="status" value="{{ request.GET.status }}">
+                    <input type="hidden" name="department" value="{{ request.GET.department }}">
+                    <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Quick search..." class="w-full bg-slate-50 border-none rounded-xl px-10 py-2 text-sm font-medium focus:ring-2 focus:ring-brand-500 transition-all">
+                    <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center text-slate-500 hover:text-slate-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </button>
+                </form>
+                <div class="flex items-center gap-3">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">View</span>
+                    <div class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 shadow-sm overflow-hidden">
+                        <button type="button" id="gridToggle" class="px-3 py-2 text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Grid view">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
+                        </button>
+                        <button type="button" id="tableToggle" class="px-3 py-2 text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Table view">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for issue in issues %}
+            {% include 'components/card.html' with title=issue.title description=issue.description image=issue.image_before_url badge_text=issue.get_status_display badge_status=issue.status location=issue.location date=issue.created_at|date:"M d, Y" rating=issue.review.rating link=issue.get_absolute_url link_text="Manage Issue" extra_class="animate-in fade-in fill-mode-both duration-500" %}
+        {% endfor %}
+    </div>
+
+    <div id="table-view" class="hidden overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Title</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Department</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Location</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Created</th>
+                        <th class="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-500">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for issue in issues %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-4 text-sm text-slate-700 font-medium"><a href="{{ issue.get_absolute_url }}" class="hover:text-brand-600">{{ issue.title }}</a></td>
+                        <td class="px-6 py-4 text-sm text-slate-500">{% if issue.department %}{{ issue.department.name }}{% else %}Unassigned{% endif %}</td>
+                        <td class="px-6 py-4 text-sm font-bold uppercase text-slate-600">{{ issue.get_status_display }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500">{{ issue.location|truncatechars:30 }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500">{{ issue.created_at|date:'M d, Y' }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{{ issue.get_absolute_url }}" class="text-brand-600 font-bold hover:underline">Manage</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if not issues %}
+    <div class="bg-white rounded-[3rem] p-16 md:p-24 text-center border border-slate-100 shadow-sm">
+        <div class="w-24 h-24 bg-brand-50 text-brand-500 flex items-center justify-center rounded-3xl mx-auto mb-10">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        <h2 class="text-3xl font-bold font-display text-slate-900 mb-4">No Issues Found</h2>
+        <p class="text-slate-500 font-medium text-lg italic">All clear — no issues matched your filter.</p>
+    </div>
+    {% endif %}
+
+    <script>
+        const gridToggle = document.getElementById('gridToggle');
+        const tableToggle = document.getElementById('tableToggle');
+        const gridView = document.getElementById('grid-view');
+        const tableView = document.getElementById('table-view');
+
+        function setDashboardView(view) {
+            const isTable = view === 'table';
+            gridView.classList.toggle('hidden', isTable);
+            tableView.classList.toggle('hidden', !isTable);
+            gridToggle.classList.toggle('bg-slate-900', !isTable);
+            gridToggle.classList.toggle('text-white', !isTable);
+            gridToggle.classList.toggle('bg-slate-50', isTable);
+            gridToggle.classList.toggle('text-slate-500', isTable);
+            tableToggle.classList.toggle('bg-slate-900', isTable);
+            tableToggle.classList.toggle('text-white', isTable);
+            tableToggle.classList.toggle('bg-slate-50', !isTable);
+            tableToggle.classList.toggle('text-slate-500', !isTable);
+            localStorage.setItem('corpDashboardView', view);
+        }
+
+        gridToggle.addEventListener('click', () => setDashboardView('grid'));
+        tableToggle.addEventListener('click', () => setDashboardView('table'));
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedView = localStorage.getItem('corpDashboardView') || 'grid';
+            setDashboardView(savedView);
+
+            const deptButton = document.getElementById('departmentDropdownButton');
+            const deptMenu = document.getElementById('departmentDropdownMenu');
+            const deptInput = document.getElementById('departmentInput');
+            const deptLabel = document.getElementById('departmentDropdownLabel');
+            const deptOptions = deptMenu.querySelectorAll('button[data-value]');
+
+            if (deptButton && deptMenu) {
+                deptButton.addEventListener('click', () => {
+                    const isHidden = deptMenu.classList.contains('hidden');
+                    deptMenu.classList.toggle('hidden', !isHidden);
+                    deptButton.setAttribute('aria-expanded', String(isHidden));
+                });
+
+                deptOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        deptInput.value = option.dataset.value;
+                        deptLabel.textContent = option.textContent.trim();
+                        document.getElementById('departmentFilterForm').submit();
+                    });
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (!deptButton.contains(event.target) && !deptMenu.contains(event.target)) {
+                        deptMenu.classList.add('hidden');
+                        deptButton.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+        });
+    </script>
+</div>
+{% endblock %}

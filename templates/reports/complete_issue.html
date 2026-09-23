@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div class="mb-10">
+        <a href="{% url 'issue_detail' issue.pk %}" class="inline-flex items-center text-sm font-bold text-brand-600 hover:text-brand-700 mb-4 group">
+            <svg class="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Back to Issue
+        </a>
+        <h1 class="text-4xl font-bold font-display text-slate-900 tracking-tight leading-tight">Complete Task</h1>
+        <p class="text-slate-500 font-medium mt-2">Upload proof of work to submit for Municipal Corporation verification.</p>
+    </div>
+
+    <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl shadow-slate-200/60 border border-slate-100">
+
+        <!-- Guidance Alert -->
+        <div class="mb-8 p-5 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
+            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-amber-500 shadow-sm shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-amber-800 uppercase tracking-tight">Important</p>
+                <p class="text-sm text-amber-700 font-medium mt-0.5">You <strong>must</strong> upload an AFTER photo before submitting. No photo = submission rejected.</p>
+            </div>
+        </div>
+
+        <!-- Issue info row -->
+        <div class="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Issue</p>
+            <p class="text-slate-900 font-bold">{{ issue.title }}</p>
+            <p class="text-slate-500 text-sm mt-1">Status: <span class="font-bold text-slate-700">{{ issue.get_status_display }}</span></p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6"
+            onsubmit="return confirm('Confirm that the issue has been fully resolved and the after photo is ready to submit?')">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">
+                    After Photo <span class="text-red-500">*</span>
+                </label>
+                <p class="text-xs text-slate-500 mb-3">Upload a clear photo showing the completed fix. JPG or PNG format.</p>
+                
+                <label id="upload-label" class="cursor-pointer block w-full">
+                    <div id="upload-area" class="border-2 border-dashed border-slate-300 rounded-2xl p-10 text-center hover:border-brand-400 hover:bg-brand-50/30 transition-all">
+                        <div id="upload-placeholder">
+                            <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            </div>
+                            <p class="text-slate-700 font-bold mb-1">Click to upload or drag and drop</p>
+                            <p class="text-xs text-slate-400">PNG, JPG up to 10MB</p>
+                        </div>
+                        <div id="upload-preview" class="hidden">
+                            <img id="preview-img" src="" alt="Preview" class="max-h-48 mx-auto rounded-xl object-cover">
+                            <p id="preview-name" class="text-sm font-medium text-slate-600 mt-3"></p>
+                        </div>
+                    </div>
+                    <input type="file" name="image_after" accept="image/*" class="hidden" id="after-image-input"
+                        onchange="previewAfterImage(this)">
+                </label>
+            </div>
+
+            <div class="pt-4 flex items-center gap-4">
+                <button type="button" onclick="history.back()"
+                    class="px-8 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all border border-slate-200">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-extrabold text-lg transition-all shadow-xl shadow-indigo-100 active:scale-[0.98] flex items-center justify-center">
+                    Submit for Approval
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function previewAfterImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('upload-placeholder').classList.add('hidden');
+        const preview = document.getElementById('upload-preview');
+        preview.classList.remove('hidden');
+        document.getElementById('preview-img').src = e.target.result;
+        document.getElementById('preview-name').textContent = file.name;
+    };
+    reader.readAsDataURL(file);
+}
+</script>
+{% endblock %}

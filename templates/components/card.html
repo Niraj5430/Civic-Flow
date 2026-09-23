@@ -1,0 +1,46 @@
+<div class="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group {{ extra_class }}">
+    {% if image %}
+    <div class="aspect-video overflow-hidden relative">
+        <img src="{{ image }}" alt="{{ title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    </div>
+    {% endif %}
+    <div class="p-6">
+        {% if badge_text %}
+        <div class="mb-4">
+            {% include 'components/status_badge.html' with status=badge_status text=badge_text %}
+        </div>
+        {% endif %}
+        
+        <div class="mb-4">
+            <h3 class="text-xl font-bold font-display text-slate-900 mb-1 truncate">{{ title }}</h3>
+            {% if location %}<p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ location }}</p>{% endif %}
+        </div>
+        
+        <p class="text-slate-500 text-sm line-clamp-2 leading-relaxed mb-6">{{ description }}</p>
+
+        {% if rating %}
+        <div class="mb-6 p-3 bg-brand-50 rounded-2xl flex items-center justify-between">
+            <span class="text-[10px] font-black text-brand-600 uppercase tracking-widest">Citizen Rating</span>
+            <div class="flex gap-0.5">
+                {% for i in "12345" %}
+                <svg class="w-4 h-4 {% if forloop.counter <= rating %}text-yellow-400{% else %}text-slate-200{% endif %}" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="pt-6 border-t border-slate-50 flex items-center justify-between">
+            <div class="flex items-center text-slate-400 text-xs font-medium">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                {{ date|default:"Recent" }}
+            </div>
+            <a href="{{ link }}" class="text-brand-600 font-bold text-sm hover:text-brand-700 flex items-center group/link">
+                {{ link_text|default:"Manage" }}
+                <svg class="w-4 h-4 ml-1 transform group-hover/link:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </a>
+        </div>
+    </div>
+</div>

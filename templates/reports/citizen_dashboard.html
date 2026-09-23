@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 gap-6">
+        <div>
+            <h1 class="text-4xl font-bold font-display text-slate-900 tracking-tight">Your Dashboard</h1>
+            <p class="text-slate-500 font-medium mt-1">Track issues you've reported in your community.</p>
+        </div>
+        <a href="{% url 'create_issue' %}" class="bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-xl shadow-brand-100 flex items-center justify-center group">
+            <svg class="w-6 h-6 mr-2 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+            Create New Report
+        </a>
+    </div>
+    
+    {% if pending_reviews_count > 0 %}
+    <div class="mb-10 p-6 bg-amber-50 border border-amber-100 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm border-l-4 border-l-amber-400 animate-in slide-in-from-top-4 duration-500">
+        <div class="flex items-center gap-4 text-center md:text-left">
+            <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-amber-500 shadow-sm shrink-0">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.382-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+            </div>
+            <div>
+                <p class="text-lg font-black text-slate-900">Pending Reviews</p>
+                <p class="text-sm text-slate-600 font-medium mt-0.5">Please give genuine review so that it'll be verified and resolved.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if first_pending_issue_id %}
+            <a href="{% url 'issue_detail' first_pending_issue_id %}" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-amber-100 whitespace-nowrap">
+                Review Now
+            </a>
+            {% else %}
+            <a href="#issues-grid" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-amber-100 whitespace-nowrap">
+                Go to Issues
+            </a>
+            {% endif %}
+            <span class="px-3 py-1 bg-amber-200 text-amber-800 text-xs font-black rounded-full uppercase tracking-tighter">{{ pending_reviews_count }} Pending</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if issues %}
+    <div id="issues-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for issue in issues %}
+            {% include 'components/card.html' with title=issue.title description=issue.description image=issue.image_before_url badge_text=issue.get_status_display badge_status=issue.status location=issue.location date=issue.created_at|date:"M d, Y" link=issue.get_absolute_url link_text="Track Progress" extra_class="animate-in fade-in fill-mode-both"|add:" duration-500" %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-[3rem] p-16 md:p-24 text-center border border-slate-100 shadow-sm relative overflow-hidden">
+        <!-- Background accent -->
+        <div class="absolute inset-0 bg-gradient-to-br from-brand-50/30 to-transparent -z-10"></div>
+        
+        <div class="w-24 h-24 bg-brand-50 text-brand-500 flex items-center justify-center rounded-3xl mx-auto mb-10 group hover:rotate-6 transition-transform">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        
+        <h2 class="text-3xl font-bold font-display text-slate-900 mb-4">No Reports Found</h2>
+        <p class="text-slate-500 mb-10 max-w-sm mx-auto font-medium text-lg leading-relaxed">
+            Your community is waiting for your eye. Spot something that needs fixing? Start your first report today.
+        </p>
+        
+        <a href="{% url 'create_issue' %}" class="inline-flex items-center bg-brand-600 hover:bg-brand-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-brand-100 active:scale-[0.98]">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            Create My First Report
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
