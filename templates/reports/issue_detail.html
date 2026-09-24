@@ -164,46 +164,285 @@
                 
                 <div class="space-y-6">
 
-                    <!-- CORPORATION ACTION: Assign to Department -->
-                    {% if is_corp and issue.status in 'REPORTED,REJECTED' %}
-                    <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
-                        <p class="text-sm font-bold text-slate-300 mb-4">
-                            {% if issue.status == 'REJECTED' %}Reassign Department{% else %}Assign Department{% endif %}
-                        </p>
-                        <form action="{% url 'assign_issue' issue.pk %}" method="post" class="space-y-4">
-                            {% csrf_token %}
-                            <div class="relative">
-                                <input type="hidden" name="department" id="departmentInput" value="{{ issue.department.pk|default:'' }}">
-                                <select id="departmentSelect" class="sr-only" aria-hidden="true" tabindex="-1">
-                                    <option value="">Select a Department</option>
-                                    {% for dept in assign_form.department.field.queryset %}
-                                    <option value="{{ dept.pk }}" {% if dept == issue.department %}selected{% endif %}>{{ dept.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <button type="button" id="departmentDropdownButton" aria-haspopup="listbox" aria-expanded="false"
-                                    class="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 pr-12 text-left font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-lg shadow-slate-950/50 transition-all">
-                                    <span id="departmentDropdownLabel" class="{% if not issue.department %}text-slate-500{% endif %}">{% if issue.department %}{{ issue.department.name }}{% else %}Select a Department{% endif %}</span>
-                                    <span class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </span>
-                                </button>
-                                <div id="departmentDropdownMenu" class="hidden absolute z-20 mt-2 w-full overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 shadow-xl shadow-slate-900/40">
-                                    <ul role="listbox" class="max-h-72 overflow-y-auto">
-                                        {% for dept in assign_form.department.field.queryset %}
-                                        <li>
-                                            <button type="button" class="w-full text-left px-4 py-3 text-sm text-slate-100 transition-all hover:bg-slate-800 focus:bg-slate-800 focus:outline-none" data-value="{{ dept.pk }}">{{ dept.name }}</button>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                            <button type="submit"
-                                class="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-bold transition-all">
-                                {% if issue.status == 'REJECTED' %}Reassign Now{% else %}Assign Department{% endif %}
+    <!-- ============================================ -->
+    <!-- AI DEPARTMENT RECOMMENDATION -->
+    <!-- ============================================ -->
+    {% if is_corp and ai_analysis and ai_analysis.is_successful and ai_analysis.suggested_department %}
+
+    <div class="p-6 bg-blue-500/10 rounded-3xl border border-blue-500/20">
+
+        <div class="flex items-start justify-between gap-4 mb-5">
+            <div>
+                <p class="text-xs font-black text-blue-400 uppercase tracking-widest mb-2">
+                    AI Assistance
+                </p>
+
+                <h4 class="text-lg font-bold text-white">
+                    🤖 Department Recommendation
+                </h4>
+
+                <p class="text-xs text-slate-400 mt-1">
+                    AI recommendation only. Corporation makes the final decision.
+                </p>
+            </div>
+
+            <span class="shrink-0 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-black">
+                {% widthratio ai_analysis.department_confidence 1 100 %}% Match
+            </span>
+        </div>
+
+
+        <!-- Recommended Department -->
+        <div class="bg-white/5 rounded-2xl p-4 mb-4 border border-white/10">
+
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                Recommended Department
+            </p>
+
+            <p class="text-base font-bold text-blue-300">
+                {{ ai_analysis.suggested_department.name }}
+            </p>
+
+        </div>
+
+
+        <!-- AI Reasoning -->
+        {% if ai_analysis.department_reasoning %}
+        <div class="mb-4">
+
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                AI Reasoning
+            </p>
+
+            <p class="text-xs text-slate-300 leading-relaxed">
+                {{ ai_analysis.department_reasoning }}
+            </p>
+
+        </div>
+        {% endif %}
+
+
+        <!-- Detected Problem -->
+        {% if ai_analysis.detected_problem %}
+        <div class="mb-5">
+
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                Detected Problem
+            </p>
+
+            <p class="text-xs text-slate-300">
+                {{ ai_analysis.detected_problem }}
+            </p>
+
+        </div>
+        {% endif %}
+
+
+        <!-- Accept Recommendation -->
+        {% if issue.status == 'REPORTED' or issue.status == 'REJECTED' %}
+
+        <form method="POST" action="{% url 'assign_issue' issue.pk %}">
+            {% csrf_token %}
+
+            <input
+                type="hidden"
+                name="department"
+                value="{{ ai_analysis.suggested_department.pk }}"
+            >
+
+            <button
+                type="submit"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20"
+            >
+                ✓ Accept Recommendation
+            </button>
+
+        </form>
+
+
+        <!-- Auto Assign -->
+        {% if ai_analysis.department_confidence >= 0.75 %}
+
+        <form
+            method="POST"
+            action="{% url 'auto_assign_issue' issue.pk %}"
+            class="mt-3"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                onclick="return confirm('Automatically assign this issue to {{ ai_analysis.suggested_department.name }}?')"
+                class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20"
+            >
+                ⚡ Auto Assign
+                <span class="text-emerald-100">
+                    ({% widthratio ai_analysis.department_confidence 1 100 %}% confidence)
+                </span>
+            </button>
+
+        </form>
+
+        {% else %}
+
+        <div class="mt-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+            Auto assignment is unavailable because AI confidence is below 75%.
+        </div>
+
+        {% endif %}
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ============================================ -->
+    <!-- CORPORATION ACTION: MANUAL ASSIGNMENT -->
+    <!-- ============================================ -->
+    {% if is_corp and issue.status in 'REPORTED,REJECTED' %}
+
+    <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
+
+        <p class="text-sm font-bold text-slate-300 mb-4">
+            {% if issue.status == 'REJECTED' %}
+                Reassign Department
+            {% else %}
+                Manual Department Assignment
+            {% endif %}
+        </p>
+
+        <form
+            action="{% url 'assign_issue' issue.pk %}"
+            method="post"
+            class="space-y-4"
+        >
+
+            {% csrf_token %}
+
+            <div class="relative">
+
+                <input
+                    type="hidden"
+                    name="department"
+                    id="departmentInput"
+                    value="{{ issue.department.pk|default:'' }}"
+                >
+
+                <select
+                    id="departmentSelect"
+                    class="sr-only"
+                    aria-hidden="true"
+                    tabindex="-1"
+                >
+                    <option value="">
+                        Select a Department
+                    </option>
+
+                    {% for dept in assign_form.department.field.queryset %}
+
+                    <option
+                        value="{{ dept.pk }}"
+                        {% if dept == issue.department %}selected{% endif %}
+                    >
+                        {{ dept.name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+
+                <button
+                    type="button"
+                    id="departmentDropdownButton"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    class="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 pr-12 text-left font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-lg transition-all"
+                >
+
+                    <span
+                        id="departmentDropdownLabel"
+                        class="{% if not issue.department %}text-slate-500{% endif %}"
+                    >
+                        {% if issue.department %}
+                            {{ issue.department.name }}
+                        {% else %}
+                            Select a Department
+                        {% endif %}
+                    </span>
+
+                    <span class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
+
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 9l-7 7-7-7"
+                            />
+                        </svg>
+
+                    </span>
+
+                </button>
+
+
+                <div
+                    id="departmentDropdownMenu"
+                    class="hidden absolute z-20 mt-2 w-full overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 shadow-xl"
+                >
+
+                    <ul
+                        role="listbox"
+                        class="max-h-72 overflow-y-auto"
+                    >
+
+                        {% for dept in assign_form.department.field.queryset %}
+
+                        <li>
+
+                            <button
+                                type="button"
+                                class="w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800 focus:bg-slate-800 focus:outline-none"
+                                data-value="{{ dept.pk }}"
+                            >
+                                {{ dept.name }}
                             </button>
-                        </form>
-                    </div>
-                    {% endif %}
+
+                        </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-bold transition-all"
+            >
+                {% if issue.status == 'REJECTED' %}
+                    Reassign Now
+                {% else %}
+                    Assign Department
+                {% endif %}
+            </button>
+
+        </form>
+
+    </div>
+
+    {% endif %}
 
                     <!-- DEPARTMENT ACTION: Accept Assignment and Start Work -->
                     {% if is_dept and issue.department == user_dept %}

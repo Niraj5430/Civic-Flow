@@ -132,20 +132,25 @@ def dashboard(request):
 @login_required
 def create_issue(request):
     user = request.user
+
     # Safety Check: Corporation and Dept staff shouldn't report issues themselves.
     if user.groups.filter(name__in=['Corporation', 'Department']).exists():
-        messages.error(request, "You are not allowed to report issues. Only Citizens can create reports.")
+        messages.error(
+            request,
+            "You are not allowed to report issues. Only Citizens can create reports."
+        )
         return redirect('dashboard')
 
     if request.method == 'POST':
-        form = IssueCreateForm(request.POST, request.FILES) # request.FILES is needed for Image uploads!
+        form = IssueCreateForm(request.POST, request.FILES)
+
         if form.is_valid():
             try:
                 issue = form.save(commit=False)
                 issue.user = user
                 issue.status = 'REPORTED'
                 issue.save()
-                
+
                 # Log this action in the history timeline
                 IssueHistory.objects.create(
                     issue=issue,
@@ -153,69 +158,150 @@ def create_issue(request):
                     actor=user,
                     note="Issue reported by citizen."
                 )
-                messages.success(request, "Issue submitted successfully! We'll review it shortly.")
+
+                # -------------------------------------------------
+                # AI ANALYSIS
+                # -------------------------------------------------
+                # AI failure MUST NOT prevent the report from being
+                # successfully submitted.
+                try:
+                    from reports.services.ai_service import analyze_issue
+
+                    analyze_issue(issue)
+
+                except Exception as ai_error:
+                    # Log AI failure but do not fail the citizen's report.
+                    import logging
+                    logging.getLogger(__name__).exception(
+                        "AI analysis failed for issue %s: %s",
+                        issue.id,
+                        ai_error
+                    )
+
+                messages.success(
+                    request,
+                    "Issue submitted successfully! We'll review it shortly."
+                )
+
                 return redirect('dashboard')
+
             except Exception:
-                messages.error(request, "Something went wrong while submitting the issue. Please try again.")
+                messages.error(
+                    request,
+                    "Something went wrong while submitting the issue. "
+                    "Please try again."
+                )
+
         else:
-            # If form is invalid, we collect exact errors and show them clearly to the user.
+            # If form is invalid, collect exact errors and show them clearly.
             error_list = []
+
             for field, errors in form.errors.items():
                 field_name = field.replace('_', ' ').title()
+
                 for error in errors:
-                    error_list.append(f"{field_name}: {error}")
-            
-            error_msg = "Please correct errors: " + " | ".join(error_list) if error_list else "Check required fields."
+                    error_list.append(
+                        f"{field_name}: {error}"
+                    )
+
+            error_msg = (
+                "Please correct errors: "
+                + " | ".join(error_list)
+                if error_list
+                else "Check required fields."
+            )
+
             messages.error(request, error_msg)
+
     else:
         form = IssueCreateForm()
 
-    return render(request, 'reports/create_issue.html', {'form': form})
-
+    return render(
+        request,
+        'reports/create_issue.html',
+        {'form': form}
+    )
+# Detailed view for a single issue.
 # Detailed view for a single issue.
 def issue_detail(request, pk):
     issue = get_object_or_404(Issue, pk=pk)
     user = request.user
 
     # Determine user permissions
-    is_corp = user.is_authenticated and user.groups.filter(name='Corporation').exists()
-    is_dept = user.is_authenticated and user.groups.filter(name='Department').exists()
-    user_dept = getattr(getattr(user, 'profile', None), 'department', None) if user.is_authenticated else None
+    is_corp = (
+        user.is_authenticated
+        and user.groups.filter(name='Corporation').exists()
+    )
 
-    # Privacy Protection:
-    # Unauthenticated users can only see Resolved (Closed) issues for transparency.
+    is_dept = (
+        user.is_authenticated
+        and user.groups.filter(name='Department').exists()
+    )
+
+    user_dept = (
+        getattr(getattr(user, 'profile', None), 'department', None)
+        if user.is_authenticated
+        else None
+    )
+
+    # Privacy Protection
     if not user.is_authenticated and issue.status != 'RESOLVED':
         messages.info(request, "Please log in to view this issue.")
         return redirect('login')
 
-    # Logged in users can see: 1. Their own issues, 2. Issues assigned to their Dept, or 3. All if they are Corp.
+    # Permission check
     if user.is_authenticated:
-        can_view = is_corp or (is_dept and issue.department == user_dept) or (issue.user == user) or issue.status == 'RESOLVED'
+        can_view = (
+            is_corp
+            or (is_dept and issue.department == user_dept)
+            or (issue.user == user)
+            or issue.status == 'RESOLVED'
+        )
+
         if not can_view:
-            messages.error(request, "You are not allowed to access this page.")
+            messages.error(
+                request,
+                "You are not allowed to access this page."
+            )
             return redirect('dashboard')
 
-    # Show assignment form only for Corporation if the issue hasn't been assigned yet.
-    assign_form = AssignIssueForm(instance=issue) if is_corp and issue.status in ['REPORTED', 'REJECTED'] else None
+    # Existing assignment form
+    assign_form = (
+        AssignIssueForm(instance=issue)
+        if is_corp and issue.status in ['REPORTED', 'REJECTED']
+        else None
+    )
 
-    # Review logic: Allow citizen to submit a review only once the issue is COMPLETED.
+    # ---------------------------------------------------------
+    # AI ANALYSIS
+    # ---------------------------------------------------------
+
+    ai_analysis = getattr(issue, 'ai_analysis', None)
+
+    # Review logic
     existing_review = getattr(issue, 'review', None)
+
     review_form = None
-    if (user.is_authenticated and issue.status in ['COMPLETED', 'RESOLVED']
-            and issue.user == user and not existing_review):
+
+    if (
+        user.is_authenticated
+        and issue.status in ['COMPLETED', 'RESOLVED']
+        and issue.user == user
+        and not existing_review
+    ):
         review_form = IssueReviewForm()
 
     return render(request, 'reports/issue_detail.html', {
-        'issue': issue,
-        'assign_form': assign_form,
-        'is_corp': is_corp,
-        'is_dept': is_dept,
-        'user_dept': user_dept,
-        'history': issue.history.all().order_by('timestamp'), # Ordered oldest to newest for the timeline
-        'existing_review': existing_review,
-        'review_form': review_form,
-    })
-
+    'issue': issue,
+    'assign_form': assign_form,
+    'is_corp': is_corp,
+    'is_dept': is_dept,
+    'user_dept': user_dept,
+    'ai_analysis': getattr(issue, 'ai_analysis', None),
+    'history': issue.history.all().order_by('timestamp'),
+    'existing_review': existing_review,
+    'review_form': review_form,
+})
 # Corporation uses this to assign an issue to a specialized Department.
 @login_required
 def assign_issue(request, pk):
@@ -226,32 +312,135 @@ def assign_issue(request, pk):
     issue = get_object_or_404(Issue, pk=pk)
 
     if issue.status not in ('REPORTED', 'REJECTED'):
-        messages.error(request, "This issue has already been assigned or is in another state.")
+        messages.error(
+            request,
+            "This issue has already been assigned or is in another state."
+        )
         return redirect('issue_detail', pk=pk)
 
     if request.method == 'POST':
         form = AssignIssueForm(request.POST, instance=issue)
+
         if form.is_valid():
             try:
+                # IMPORTANT:
+                # Never allow an issue to become ASSIGNED
+                # without an actual department.
+                department = form.cleaned_data.get('department')
+
+                if not department:
+                    messages.error(
+                        request,
+                        "Please select a department before assigning this issue."
+                    )
+                    return redirect('issue_detail', pk=pk)
+
                 issue = form.save(commit=False)
+
+                # Extra safety check
+                if not issue.department:
+                    messages.error(
+                        request,
+                        "Please select a department before assigning this issue."
+                    )
+                    return redirect('issue_detail', pk=pk)
+
                 issue.status = 'ASSIGNED'
                 issue.assigned_by = request.user
                 issue.assigned_at = timezone.now()
                 issue.save()
-                
-                # Log assignment in the history
+
+                # Log assignment
                 IssueHistory.objects.create(
                     issue=issue,
                     status='ASSIGNED',
                     actor=request.user,
                     note=f"Assigned to {issue.department.name} by Corporation."
                 )
-                messages.success(request, f"Issue successfully assigned to {issue.department.name}.")
-            except Exception:
-                messages.error(request, "Assignment failed. Please try again.")
+
+                messages.success(
+                    request,
+                    f"Issue successfully assigned to {issue.department.name}."
+                )
+
+            except Exception as e:
+                messages.error(
+                    request,
+                    "Assignment failed. Please try again."
+                )
+
         else:
-            messages.error(request, "Please select a valid department.")
-    
+            messages.error(
+                request,
+                "Please select a valid department."
+            )
+
+    return redirect('issue_detail', pk=pk)
+
+# Automatically assign an issue to the AI-recommended department.
+@login_required
+def auto_assign_issue(request, pk):
+    # Only Corporation users can auto-assign
+    if not request.user.groups.filter(name='Corporation').exists():
+        messages.error(request, "Only Corporation managers can auto-assign issues.")
+        return redirect('dashboard')
+
+    issue = get_object_or_404(Issue, pk=pk)
+
+    # Only unassigned/rejected issues can be assigned
+    if issue.status not in ('REPORTED', 'REJECTED'):
+        messages.error(request, "This issue cannot be assigned in its current state.")
+        return redirect('issue_detail', pk=pk)
+
+    # Get AI analysis
+    ai_analysis = getattr(issue, 'ai_analysis', None)
+
+    # Make sure a successful AI recommendation exists
+    if not ai_analysis or not ai_analysis.is_successful:
+        messages.error(request, "No successful AI recommendation is available.")
+        return redirect('issue_detail', pk=pk)
+
+    # Make sure AI selected a department
+    if not ai_analysis.suggested_department:
+        messages.error(request, "AI did not recommend a department.")
+        return redirect('issue_detail', pk=pk)
+
+    # Safety threshold
+    if ai_analysis.department_confidence is None or ai_analysis.department_confidence < 0.75:
+        messages.error(request, "AI confidence is below the 75% auto-assignment threshold.")
+        return redirect('issue_detail', pk=pk)
+
+    try:
+        # Assign the AI-recommended department
+        issue.department = ai_analysis.suggested_department
+        issue.status = 'ASSIGNED'
+        issue.assigned_by = request.user
+        issue.assigned_at = timezone.now()
+        issue.save()
+
+        # Record assignment in history
+        IssueHistory.objects.create(
+            issue=issue,
+            status='ASSIGNED',
+            actor=request.user,
+            note=(
+                f"Automatically assigned to "
+                f"{issue.department.name} using AI recommendation "
+                f"({ai_analysis.department_confidence:.0%} confidence)."
+            )
+        )
+
+        messages.success(
+            request,
+            f"Issue automatically assigned to {issue.department.name}."
+        )
+
+    except Exception:
+        messages.error(
+            request,
+            "Automatic assignment failed. Please try manual assignment."
+        )
+
     return redirect('issue_detail', pk=pk)
 
 # The Main Workflow Engine: Handles Start, Complete, Approve, and Reject actions.

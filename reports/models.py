@@ -97,3 +97,32 @@ class IssueReview(models.Model):
 
     def __str__(self):
         return f"Review for #{self.issue_id} — {self.rating}★"
+
+
+# Stores AI analysis and audit trail for an Issue.
+class IssueAIAnalysis(models.Model):
+    issue = models.OneToOneField(Issue, on_delete=models.CASCADE, related_name='ai_analysis')
+    suggested_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='ai_suggestions')
+    department_confidence = models.FloatField(null=True, blank=True, help_text="Confidence score between 0.0 and 1.0")
+    department_reasoning = models.TextField(blank=True, help_text="Explanation of why this department was recommended")
+    
+    is_image_relevant = models.BooleanField(null=True, blank=True, help_text="Whether the uploaded image appears relevant to the issue")
+    image_confidence = models.FloatField(null=True, blank=True, help_text="Confidence score of relevance")
+    image_explanation = models.TextField(blank=True, help_text="Explanation of visual analysis")
+    detected_problem = models.CharField(max_length=150, blank=True, help_text="Problem category visually identified in the image")
+    
+    model_name = models.CharField(max_length=100, blank=True)
+    raw_response = models.JSONField(null=True, blank=True)
+    is_successful = models.BooleanField(default=False)
+    error_message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Issue AI Analysis"
+        verbose_name_plural = "Issue AI Analyses"
+
+    def __str__(self):
+        dept_name = self.suggested_department.name if self.suggested_department else "None"
+        confidence = f"{self.department_confidence * 100:.0f}%" if self.department_confidence is not None else "N/A"
+        return f"AI Analysis for #{self.issue_id} -> {dept_name} ({confidence})"
+

@@ -13,6 +13,7 @@ urlpatterns = [
     
     # Action endpoints (mostly for Corporation and Department)
     path('issue/<int:pk>/assign/', views.assign_issue, name='assign_issue'),
+    path('issue/<int:pk>/auto-assign/',views.auto_assign_issue, name='auto_assign_issue'),
     path('issue/<int:pk>/status/<str:action>/', views.update_status, name='update_status'), # Universal status updater
     path('issue/<int:pk>/review/', views.submit_review, name='submit_review'), # For Citizen feedback
     

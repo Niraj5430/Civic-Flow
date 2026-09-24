@@ -41,9 +41,15 @@
 
     {% if issues %}
     <div id="issues-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {% for issue in issues %}
-            {% include 'components/card.html' with title=issue.title description=issue.description image=issue.image_before_url badge_text=issue.get_status_display badge_status=issue.status location=issue.location date=issue.created_at|date:"M d, Y" link=issue.get_absolute_url link_text="Track Progress" extra_class="animate-in fade-in fill-mode-both"|add:" duration-500" %}
-        {% endfor %}
+
+    {% for issue in issues %}
+
+        {% url 'issue_detail' issue.pk as issue_url %}
+
+        {% include 'components/card.html' with title=issue.title description=issue.description image=issue.image_before_url badge_text=issue.get_status_display badge_status=issue.status location=issue.location date=issue.created_at|date:"M d, Y" link=issue_url link_text="Track Progress" extra_class="animate-in fade-in fill-mode-both"|add:" duration-500" %}
+
+    {% endfor %}
+
     </div>
     {% else %}
     <div class="bg-white rounded-[3rem] p-16 md:p-24 text-center border border-slate-100 shadow-sm relative overflow-hidden">

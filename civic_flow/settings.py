@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     'accounts',                    # Our custom app for User Profiles & Login
     'reports',                     # Our custom app for Issues & Dashboards
 ]
-
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -120,3 +120,14 @@ MESSAGE_TAGS = {
     messages_constants.WARNING: 'warning',
     messages_constants.ERROR:   'error',
 }
+
+# Gemini AI Layer Configuration
+AI_MODE = os.getenv('AI_MODE', 'demo')  # Preserved from Phase 1
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+AI_MODEL = os.getenv('AI_MODEL', 'gemini-3.8-flash')
+AI_ENABLED = os.getenv('AI_ENABLED', 'True').lower() in ('true', '1')
+AI_AUTO_ASSIGN = False  # Enforced suggestion-only mode
+AI_CONFIDENCE_THRESHOLD = float(os.getenv('AI_CONFIDENCE_THRESHOLD', '0.75'))
+AI_TIMEOUT_SECONDS = int(os.getenv('AI_TIMEOUT_SECONDS', '10'))
+
+
