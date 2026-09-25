@@ -24,26 +24,25 @@ The platform also uses AI to recommend the appropriate department based on the r
 ### Corporation
 
 - View all reported issues
-- Filter issues by status
-- Filter issues by department
+- Filter issues by status and department
+- Search issues
 - View complete issue details
 - View AI department recommendations
+- View AI confidence score and reasoning
 - Accept AI recommendations
 - Manually assign issues to departments
 - Reassign rejected issues
 - Verify completed work
-- Approve department work
-- Reject department work and request rework
+- Approve or reject department work
 - View citizen reviews
 
 ### Department
 
 - View issues assigned to the department
 - Start work on assigned issues
-- Move issues to `IN_PROGRESS`
-- Upload an "After" image as proof of completion
+- Upload an "After" image as proof
 - Mark issues as completed
-- Rework rejected issues
+- Handle rejected issues and perform rework
 
 ### AI Assistance
 
@@ -55,14 +54,13 @@ The AI can:
 - Recommend an appropriate department
 - Provide a confidence score
 - Provide reasoning for the recommendation
+- Analyze whether the uploaded image is relevant to the reported issue
 
 AI recommendations are assistance only. The Corporation retains control over the final department assignment.
 
 ### Civic Points
 
 Citizens can earn Civic Points through participation in the civic reporting workflow.
-
-Civic Points are stored as part of the user's profile and can be displayed as part of the citizen profile.
 
 ---
 
@@ -78,13 +76,10 @@ Citizen Reports Issue
 AI Analysis / Department Recommendation
         |
         v
-Corporation Reviews Recommendation
-        |
-        v
 Corporation Assigns Department
         |
         v
-      ASSIGNED
+     ASSIGNED
         |
         v
 Department Starts Work
@@ -102,34 +97,49 @@ Department Uploads After Image
 Corporation Verification
        / \
       /   \
- Reject   Approve
-   |         |
-   v         v
+  Reject  Approve
+    |        |
+    v        v
 REJECTED   RESOLVED
-   |
-   v
+    |
+    v
 Department Reworks Issue
+```
 
+---
 
-Technology Stack
-Backend
-Python
-Django
-Django ORM
-PostgreSQL
-Frontend
-HTML
-Tailwind CSS
-JavaScript
-AI
-Google Gemini API
-Gemini Flash model
-Development Tools
-Git
-GitHub
-VS Code
-Python Virtual Environment
-Project Structure
+## Technology Stack
+
+### Backend
+
+- Python
+- Django
+- Django ORM
+- PostgreSQL
+
+### Frontend
+
+- HTML
+- Tailwind CSS
+- JavaScript
+
+### AI
+
+- Google Gemini API
+- Gemini Flash model
+
+### Development Tools
+
+- Git
+- GitHub
+- VS Code
+- Python Virtual Environment
+
+---
+
+## Project Structure
+
+```text
 civic-flow/
 │
 ├── accounts/
@@ -137,489 +147,537 @@ civic-flow/
 │   ├── management/
 │   │   └── commands/
 │   │       └── create_demo_users.py
-│   ├── models.py
-│   ├── views.py
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
 │   ├── forms.py
-│   └── ...
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+│
+├── civic_flow/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
 │
 ├── reports/
 │   ├── migrations/
 │   ├── services/
-│   ├── templates/
-│   ├── models.py
-│   ├── views.py
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
 │   ├── forms.py
-│   └── ...
-│
-├── civic_flow/
-│   ├── settings.py
+│   ├── models.py
+│   ├── tests.py
 │   ├── urls.py
-│   └── ...
+│   └── views.py
 │
 ├── media/
-│
 ├── static/
+├── templates/
 │
-├── manage.py
-├── requirements.txt
+├── .env
 ├── .env.example
-└── README.md
-Installation
-1. Clone the Repository
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd civic-flow
-2. Create a Virtual Environment
-Windows
-python -m venv .venv
+├── .gitignore
+├── db.sqlite3
+├── manage.py
+├── README.md
+└── requirements.txt
+```
 
-Activate it:
+---
 
-.\.venv\Scripts\activate
-Linux / macOS
-python3 -m venv .venv
-source .venv/bin/activate
-3. Install Dependencies
-pip install -r requirements.txt
-4. Configure Environment Variables
+## User Roles
 
-Create a .env file in the project root.
+Civic Flow has three main user roles.
 
-Use .env.example as a template.
-
-Example:
-
-POSTGRES_DB=civicflow
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_password
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-
-GEMINI_API_KEY=your_gemini_api_key
-
-Do not commit your real .env file to GitHub.
-
-5. Apply Database Migrations
-python manage.py migrate
-6. Create Demo Accounts
-
-Civic Flow includes a custom Django management command for creating demo accounts.
-
-Run:
-
-python manage.py create_demo_users
-
-This creates the required demo users, groups, department, and department-user association.
-
-7. Start the Development Server
-python manage.py runserver
-
-Open:
-
-http://127.0.0.1:8000/
-Environment Variables
-
-Civic Flow uses environment variables for database and AI configuration.
-
-Create a .env file containing the required values.
-
-POSTGRES_DB=civicflow
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_password
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-
-GEMINI_API_KEY=your_gemini_api_key
-
-The repository should contain:
-
-.env.example
-
-but the actual:
-
-.env
-
-file should remain local and should not be committed to GitHub.
-
-Important
-
-Never publish:
-
-PostgreSQL passwords
-Gemini API keys
-Django secret keys
-Personal credentials
-Production credentials
-User Roles
-
-Civic Flow contains three main user roles.
-
-Citizen
+### 1. Citizen
 
 Citizens can:
 
-Create civic issue reports
-Upload issue images
-Add descriptions
-Provide location information
-Track their issues
-View issue history
-View assigned departments
-Submit reviews
-Earn Civic Points
-Corporation
+- Register/login
+- Report civic issues
+- Upload images
+- Provide location and description
+- Track issue progress
+- View the issue timeline
+- View assigned department
+- Submit reviews
+- Earn Civic Points
 
-Corporation users can:
+### 2. Corporation
 
-View all issues
-Review reported issues
-View AI recommendations
-Accept AI recommendations
-Manually assign departments
-Reassign rejected issues
-Verify completed work
-Approve completed work
-Reject completed work
-View citizen reviews
-Department
-
-Department users are associated with a specific department.
+Corporation users manage the overall issue workflow.
 
 They can:
 
-View issues assigned to their department
-Start work
-Move issues to IN_PROGRESS
-Upload completion evidence
-Mark issues as COMPLETED
-Rework rejected issues
-Demo Accounts
+- View reported issues
+- Review AI recommendations
+- Assign departments
+- Reassign issues
+- Verify completed work
+- Approve or reject department work
 
-Civic Flow provides a management command to automatically create demo accounts for local development and testing.
+### 3. Department
+
+Department users handle issues assigned to their department.
+
+They can:
+
+- View assigned issues
+- Start work
+- Upload proof of completion
+- Mark work as completed
+- Rework rejected issues
+
+---
+
+## Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
+cd civic-flow
+```
+
+Replace the repository URL with the actual GitHub repository URL.
+
+---
+
+### 2. Create a Virtual Environment
+
+Windows:
+
+```powershell
+python -m venv .venv
+```
+
+Activate it:
+
+```powershell
+.\.venv\Scripts\activate
+```
+
+---
+
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the project root.
+
+Example:
+
+```env
+POSTGRES_DB=civicflow
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_database_password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+### Important
+
+Do not commit your real `.env` file to GitHub.
+
+The `.env` file should remain private.
+
+Use `.env.example` to show other developers which environment variables are required.
+
+Example:
+
+```env
+POSTGRES_DB=civicflow
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=change-me
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+---
+
+## Database Setup
+
+Make sure PostgreSQL is installed and running.
+
+Create the database:
+
+```sql
+CREATE DATABASE civicflow;
+```
+
+Then run Django migrations:
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+---
+
+## Create an Admin User
+
+Create a Django superuser:
+
+```bash
+python manage.py createsuperuser
+```
+
+Follow the prompts to set:
+
+- Username
+- Email
+- Password
+
+Then start the development server:
+
+```bash
+python manage.py runserver
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+Admin panel:
+
+```text
+http://127.0.0.1:8000/admin/
+```
+
+---
+
+## Demo Accounts
+
+For development/testing, the project includes a management command that can create demo users.
 
 Run:
 
+```bash
 python manage.py create_demo_users
+```
 
-The command creates the required groups, demo users, department, and department-user association.
+This creates the required demo users and role configuration for testing the Citizen, Corporation, and Department workflows.
 
-Demo Roles
-Username	Role	Department
-demo_citizen	Citizen	—
-demo_corporation	Corporation	—
-demo_department	Department	Water Supply
+### Important
 
-The Department demo account is automatically connected to the Water Supply department.
+The demo accounts are intended for local development/testing only.
 
-The command can be run multiple times without intentionally creating duplicate demo accounts.
+Change or remove demo passwords before deploying the project publicly.
 
-Security: Demo accounts are intended only for local development and testing. Do not use demo credentials in production.
+If the command is not used, users can also be created manually through the Django admin panel.
 
-AI Department Recommendation
+---
 
-When a citizen reports an issue, Civic Flow can send the issue information to the Gemini API for analysis.
+## Running the Project
 
-The AI can provide:
+Activate the virtual environment:
 
-Suggested Department
-Confidence
-Detected Problem
-Reasoning
+```powershell
+.\.venv\Scripts\activate
+```
 
-For example:
+Start the development server:
 
-Suggested Department:
-Water Supply
+```bash
+python manage.py runserver
+```
 
-Confidence:
-95%
+Then open:
 
-Detected Problem:
-Flooding caused by a water leak from a tank
+```text
+http://127.0.0.1:8000/
+```
 
-Reasoning:
-The issue appears to involve a water leak from a tank,
-which corresponds to the Water Supply department.
+---
 
-The AI recommendation does not automatically replace Corporation control.
+## AI Configuration
 
-The Corporation can review the recommendation and:
+Civic Flow uses the Google Gemini API for AI-assisted issue analysis.
 
-Accept the recommended department
-Manually select another department
-Use Auto Assign when the configured confidence requirement is satisfied
-AI Configuration
+The AI layer can provide:
 
-AI configuration is controlled through the Django settings and environment variables.
+- Detected problem
+- Suggested department
+- Department confidence
+- Explanation/reasoning
+- Image relevance analysis
 
-The Gemini API key should be provided through:
+The Gemini API key is configured through the `.env` file.
 
+Example:
+
+```env
 GEMINI_API_KEY=your_gemini_api_key
+```
 
-AI-related settings can include:
+The AI system is designed as a recommendation layer.
 
-AI_ENABLED
-AI_AUTO_ASSIGN
-AI_CONFIDENCE_THRESHOLD
-AI_TIMEOUT_SECONDS
-AI_MODEL
+The Corporation user makes the final department assignment.
 
-The AI system is designed to provide department recommendations and supporting information while keeping the final assignment under Corporation control.
+---
 
-Civic Points
+## AI Workflow
+
+```text
+Citizen Creates Report
+        |
+        v
+Issue Submitted
+        |
+        v
+Gemini AI Analysis
+        |
+        +----> Detect Problem
+        |
+        +----> Suggest Department
+        |
+        +----> Confidence Score
+        |
+        +----> Reasoning
+        |
+        +----> Image Relevance
+        |
+        v
+Corporation Reviews Recommendation
+        |
+        v
+Final Department Assignment
+```
+
+---
+
+## Civic Points
 
 Civic Flow includes a Civic Points system for citizen participation.
 
-Each user profile can contain a Civic Points value.
+The user's Civic Points are stored in the account profile.
 
-Example:
+Points can be used to represent participation and engagement within the civic reporting workflow.
 
-Civic Points: 10
+---
 
-Civic Points can be used to recognize participation in the civic reporting workflow.
+## Issue Statuses
 
-The system can be extended in the future with:
+The application uses the following main issue statuses:
 
-Points history
-Achievement levels
-Leaderboards
-Badges
-Participation statistics
-Issue Statuses
-Status	Meaning
-REPORTED	Citizen has submitted an issue
-ASSIGNED	Corporation has assigned the issue to a department
-IN_PROGRESS	Department has started working
-COMPLETED	Department has completed the work and submitted proof
-RESOLVED	Corporation has approved the completed work
-REJECTED	Corporation has rejected the submitted work and requested rework
-Issue History
+| Status | Description |
+|---|---|
+| `REPORTED` | Citizen has submitted the issue |
+| `ASSIGNED` | Corporation has assigned the issue to a department |
+| `IN_PROGRESS` | Department has started working on the issue |
+| `COMPLETED` | Department has completed the work and submitted proof |
+| `RESOLVED` | Corporation has verified and approved the work |
+| `REJECTED` | Corporation rejected the submitted work and requested rework |
 
-Civic Flow maintains an issue history/timeline.
+---
 
-Major actions are recorded, including:
+## Issue History
 
-Issue reported
-Department assigned
-Work started
-Work completed
-Issue approved
-Issue rejected
+Each important workflow action is recorded in the issue history.
 
-This provides a transparent record of the issue lifecycle.
+Examples include:
 
-Citizen Reviews
+- Issue reported
+- Department assigned
+- Work started
+- Work completed
+- Issue rejected
+- Issue resolved
 
-After an issue reaches the appropriate completed/resolved stage, the citizen who originally reported the issue can submit a review.
+This provides a transparency timeline that allows citizens and administrators to track the progress of an issue.
 
-A review can contain:
+---
 
-Rating
-Optional comment
+## Image Uploads
 
-Corporation users can view citizen reviews when reviewing completed work.
+Citizens can upload an image showing the reported problem.
 
-Testing the Complete Workflow
+Departments can upload an "After" image as proof that the issue has been addressed.
 
-The complete application workflow can be tested using the demo accounts.
+Uploaded media is stored through Django's media configuration.
 
-Step 1 — Citizen
+For production deployments, configure appropriate persistent media storage.
 
-Login as:
+---
 
-demo_citizen
-
-Create a civic issue with:
-
-Title
-Description
-Location
-Image
-
-The issue starts as:
-
-REPORTED
-Step 2 — Corporation
-
-Login as:
-
-demo_corporation
-
-The Corporation can:
-
-View the reported issue
-Open the issue details
-View the AI recommendation
-Review confidence and reasoning
-Accept the recommendation or manually select a department
-Assign the issue
-
-The issue becomes:
-
-ASSIGNED
-Step 3 — Department
-
-Login as:
-
-demo_department
-
-The assigned issue appears in the Department dashboard.
-
-The Department can:
-
-Start work
-Move the issue to IN_PROGRESS
-Complete the work
-Upload an "After" image
-
-The issue becomes:
-
-COMPLETED
-Step 4 — Corporation Verification
-
-Login again as:
-
-demo_corporation
-
-Review the completed issue.
-
-The Corporation can:
-
-Approve
-
-The issue becomes:
-
-RESOLVED
-Reject
-
-The issue becomes:
-
-REJECTED
-
-The Department can then rework the issue.
-
-Step 5 — Citizen Review
-
-The Citizen can view the completed/resolved issue and submit a rating and optional comment.
-
-Useful Django Commands
-Start Development Server
-python manage.py runserver
-Create Migrations
-python manage.py makemigrations
-Apply Migrations
-python manage.py migrate
-Create Superuser
-python manage.py createsuperuser
-Create Demo Accounts
-python manage.py create_demo_users
-Check Project Configuration
-python manage.py check
-Run Tests
-python manage.py test
-Security Notes
+## Security Notes
 
 Before deploying Civic Flow to production:
 
-Set DEBUG=False
-Configure ALLOWED_HOSTS
-Use strong database credentials
-Use a secure Django SECRET_KEY
-Keep .env outside version control
-Never expose API keys
-Never use demo credentials in production
-Configure secure database access
-Configure HTTPS
-Review authentication and authorization permissions
-Configure production static and media file handling
-Git and GitHub Workflow
+- Do not commit `.env`
+- Use a strong Django `SECRET_KEY`
+- Use a production PostgreSQL database
+- Set `DEBUG=False`
+- Configure `ALLOWED_HOSTS`
+- Configure secure HTTPS settings
+- Protect uploaded media
+- Use strong passwords
+- Replace development/demo credentials
+- Keep API keys private
 
-After completing a meaningful development phase, check the changed files:
+---
 
+## Development
+
+Useful Django commands:
+
+### Create migrations
+
+```bash
+python manage.py makemigrations
+```
+
+### Apply migrations
+
+```bash
+python manage.py migrate
+```
+
+### Create superuser
+
+```bash
+python manage.py createsuperuser
+```
+
+### Run development server
+
+```bash
+python manage.py runserver
+```
+
+### Check Django configuration
+
+```bash
+python manage.py check
+```
+
+### Run tests
+
+```bash
+python manage.py test
+```
+
+---
+
+## Git Workflow
+
+After completing a meaningful working phase:
+
+```bash
 git status
+```
 
-Add the intended changes:
+Review the changes:
 
+```bash
+git diff
+```
+
+Add the changes:
+
+```bash
 git add .
+```
 
 Commit:
 
+```bash
 git commit -m "Describe the completed change"
+```
 
 Push:
 
+```bash
 git push
+```
 
-Example:
+Use clear commit messages that describe the completed feature or fix.
 
-git commit -m "Add Civic Points and demo account setup"
+Examples:
 
-For future development, meaningful completed phases should be committed separately so the project history remains understandable.
+```bash
+git commit -m "Add civic points system"
+```
 
-Development Guidelines
+```bash
+git commit -m "Add AI department recommendations"
+```
 
-When modifying Civic Flow:
+```bash
+git commit -m "Add issue verification workflow"
+```
 
-Make one logical feature/change at a time.
-Test the feature locally.
-Run Django checks.
-Check migrations.
-Review git status.
-Commit the completed phase.
-Push the commit to GitHub.
+---
 
-Useful checks:
+## Current Development Status
 
-python manage.py check
-python manage.py makemigrations
-python manage.py migrate
-python manage.py test
-Project Status
-Implemented
-Citizen registration/login
-Corporation login
-Department login
-Role-based access
-Civic issue reporting
-Image upload
-Location information
-Issue status tracking
-Issue history/timeline
-Corporation dashboard
-Department dashboard
-Citizen dashboard
-Corporation-to-department assignment
-Manual department assignment
-AI department recommendation
-AI confidence score
-AI reasoning
-AI-assisted assignment
-Automatic assignment
-Department workflow
-Completion image upload
-Corporation verification
-Issue rejection and rework
-Citizen reviews
-Civic Points
-User profiles
-Demo account creation command
-Future Improvements
+The core Civic Flow workflow is implemented:
+
+- Citizen issue reporting
+- Issue tracking
+- Corporation dashboard
+- Department dashboard
+- Department assignment
+- AI department recommendation
+- AI confidence and reasoning
+- Issue status workflow
+- Department work workflow
+- After-image proof
+- Corporation verification
+- Issue rejection and rework
+- Issue history/timeline
+- Citizen reviews
+- Civic Points
+- User profiles
+- Role-based access
+
+---
+
+## Future Improvements
 
 Possible future improvements include:
 
-Civic Points history
-Civic Points leaderboard
-Citizen badges and achievements
-Advanced issue analytics
-Geographic issue heatmaps
-Email notifications
-In-app notifications
-Improved AI image analysis
-Corporation analytics dashboard
-Advanced reporting
-Automated testing
-Production deployment
-Improved role and permission management
-License
+- Notifications
+- Email alerts
+- Real-time issue updates
+- Civic Points leaderboard
+- More detailed analytics
+- Location-based issue hotspots
+- Advanced AI image analysis
+- Production cloud deployment
+- Automated testing expansion
+- API development
+- Mobile application
 
-This project is currently developed for educational and project purposes.
+---
 
+## License
+
+This project is currently intended for educational, portfolio, and development purposes.
+
+Add an appropriate open-source license before distributing the project under a formal open-source license.
+
+---
+
+## Author
+
+Civic Flow
+
+Built with Django, PostgreSQL, Tailwind CSS, and Google Gemini AI.
