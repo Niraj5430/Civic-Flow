@@ -517,22 +517,7 @@ For production deployments, configure appropriate persistent media storage.
 
 ---
 
-## Security Notes
 
-Before deploying Civic Flow to production:
-
-- Do not commit `.env`
-- Use a strong Django `SECRET_KEY`
-- Use a production PostgreSQL database
-- Set `DEBUG=False`
-- Configure `ALLOWED_HOSTS`
-- Configure secure HTTPS settings
-- Protect uploaded media
-- Use strong passwords
-- Replace development/demo credentials
-- Keep API keys private
-
----
 
 ## Development
 
@@ -576,55 +561,6 @@ python manage.py test
 
 ---
 
-## Git Workflow
-
-After completing a meaningful working phase:
-
-```bash
-git status
-```
-
-Review the changes:
-
-```bash
-git diff
-```
-
-Add the changes:
-
-```bash
-git add .
-```
-
-Commit:
-
-```bash
-git commit -m "Describe the completed change"
-```
-
-Push:
-
-```bash
-git push
-```
-
-Use clear commit messages that describe the completed feature or fix.
-
-Examples:
-
-```bash
-git commit -m "Add civic points system"
-```
-
-```bash
-git commit -m "Add AI department recommendations"
-```
-
-```bash
-git commit -m "Add issue verification workflow"
-```
-
----
 
 ## Current Development Status
 
