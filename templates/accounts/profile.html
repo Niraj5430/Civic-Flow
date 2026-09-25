@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="max-w-5xl mx-auto py-10">
+
+    <!-- Profile Header -->
+    <div class="bg-slate-900 rounded-[2.5rem] p-8 md:p-10 text-white shadow-xl mb-8">
+
+        <div class="flex flex-col md:flex-row md:items-center gap-6">
+
+            <div class="w-20 h-20 rounded-3xl bg-brand-500 flex items-center justify-center text-3xl font-black">
+                {{ request.user.username|first|upper }}
+            </div>
+
+            <div>
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                    Citizen Profile
+                </p>
+
+                <h1 class="text-3xl font-black">
+                    {{ request.user.get_full_name|default:request.user.username }}
+                </h1>
+
+                <p class="text-slate-400 mt-1">
+                    @{{ request.user.username }}
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Civic Points -->
+    <div class="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 mb-8">
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+
+            <div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                    Civic Points
+                </p>
+
+                <div class="flex items-baseline gap-3">
+                    <span class="text-5xl font-black text-brand-600">
+                        {{ profile.civic_points }}
+                    </span>
+
+                    <span class="text-slate-400 font-bold">
+                        points
+                    </span>
+                </div>
+
+                <p class="text-sm text-slate-500 mt-2">
+                    Earn points by contributing to your community.
+                </p>
+            </div>
+
+
+            <!-- Simple Civic Level -->
+            <div class="bg-brand-50 rounded-2xl px-6 py-4 text-center">
+
+                {% if profile.civic_points >= 100 %}
+                    <p class="text-xs font-black uppercase tracking-widest text-brand-600">
+                        Civic Champion
+                    </p>
+                {% elif profile.civic_points >= 50 %}
+                    <p class="text-xs font-black uppercase tracking-widest text-brand-600">
+                        Community Leader
+                    </p>
+                {% elif profile.civic_points >= 25 %}
+                    <p class="text-xs font-black uppercase tracking-widest text-brand-600">
+                        Active Citizen
+                    </p>
+                {% else %}
+                    <p class="text-xs font-black uppercase tracking-widest text-brand-600">
+                        New Contributor
+                    </p>
+                {% endif %}
+
+                <p class="text-xs text-slate-500 mt-1">
+                    Civic Level
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div class="bg-white rounded-3xl p-7 border border-slate-100 shadow-sm">
+            <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Reports
+            </p>
+
+            <p class="text-4xl font-black text-slate-900 mt-3">
+                {{ total_reports }}
+            </p>
+
+            <p class="text-sm text-slate-500 mt-1">
+                Issues reported
+            </p>
+        </div>
+
+
+        <div class="bg-white rounded-3xl p-7 border border-slate-100 shadow-sm">
+            <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Resolved
+            </p>
+
+            <p class="text-4xl font-black text-emerald-600 mt-3">
+                {{ resolved_reports }}
+            </p>
+
+            <p class="text-sm text-slate-500 mt-1">
+                Reports successfully resolved
+            </p>
+        </div>
+
+
+        <div class="bg-white rounded-3xl p-7 border border-slate-100 shadow-sm">
+            <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Completed
+            </p>
+
+            <p class="text-4xl font-black text-blue-600 mt-3">
+                {{ completed_reports }}
+            </p>
+
+            <p class="text-sm text-slate-500 mt-1">
+                Reports awaiting verification
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

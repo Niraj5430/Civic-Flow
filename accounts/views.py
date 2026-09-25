@@ -99,3 +99,27 @@ def manual_password_reset(request):
         form = ManualPasswordResetForm()
 
     return render(request, 'accounts/password_reset_manual.html', {'form': form})
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from reports.models import Issue
+
+
+@login_required
+def profile(request):
+    user = request.user
+
+    profile = user.profile
+
+    issues = Issue.objects.filter(user=user)
+
+    total_reports = issues.count()
+    resolved_reports = issues.filter(status='RESOLVED').count()
+    completed_reports = issues.filter(status='COMPLETED').count()
+
+    return render(request, 'accounts/profile.html', {
+        'profile': profile,
+        'total_reports': total_reports,
+        'resolved_reports': resolved_reports,
+        'completed_reports': completed_reports,
+    })

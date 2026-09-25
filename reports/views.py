@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
 from django.db.models import Q
+
+from reports.services.civic_points import award_report_points
 from .models import Issue, Department, IssueHistory, IssueReview
 from .forms import IssueCreateForm, IssueCompleteForm, AssignIssueForm, DepartmentForm, IssueReviewForm
 
@@ -151,6 +153,8 @@ def create_issue(request):
                 issue.status = 'REPORTED'
                 issue.save()
 
+                from reports.services.civic_points import award_report_points
+                award_report_points(issue)
                 # Log this action in the history timeline
                 IssueHistory.objects.create(
                     issue=issue,
@@ -323,25 +327,13 @@ def assign_issue(request, pk):
 
         if form.is_valid():
             try:
-                # IMPORTANT:
-                # Never allow an issue to become ASSIGNED
-                # without an actual department.
-                department = form.cleaned_data.get('department')
-
-                if not department:
-                    messages.error(
-                        request,
-                        "Please select a department before assigning this issue."
-                    )
-                    return redirect('issue_detail', pk=pk)
-
                 issue = form.save(commit=False)
 
-                # Extra safety check
+                # Safety check: department must actually be selected
                 if not issue.department:
                     messages.error(
                         request,
-                        "Please select a department before assigning this issue."
+                        "Please select a department before assigning the issue."
                     )
                     return redirect('issue_detail', pk=pk)
 
@@ -350,7 +342,11 @@ def assign_issue(request, pk):
                 issue.assigned_at = timezone.now()
                 issue.save()
 
-                # Log assignment
+                # Award +5 Civic Points for successful assignment
+                from reports.services.civic_points import award_assignment_points
+                award_assignment_points(issue)
+
+                # Log assignment in history
                 IssueHistory.objects.create(
                     issue=issue,
                     status='ASSIGNED',
@@ -363,7 +359,7 @@ def assign_issue(request, pk):
                     f"Issue successfully assigned to {issue.department.name}."
                 )
 
-            except Exception as e:
+            except Exception:
                 messages.error(
                     request,
                     "Assignment failed. Please try again."
@@ -455,70 +451,147 @@ def update_status(request, pk, action):
     # ACTIONS FOR DEPARTMENT USERS
     if is_dept:
         if issue.department != user_dept:
-            messages.error(request, "This issue is not assigned to your department.")
+            messages.error(
+                request,
+                "This issue is not assigned to your department."
+            )
             return redirect('dashboard')
 
-        # 'Start': Move from Assigned -> In Progress
+        # Start: Assigned -> In Progress
         if action == 'start':
             if issue.status not in ('ASSIGNED', 'REJECTED'):
-                messages.error(request, "Invalid status for starting work.")
+                messages.error(
+                    request,
+                    "Invalid status for starting work."
+                )
             else:
                 issue.status = 'IN_PROGRESS'
                 issue.save()
-                IssueHistory.objects.create(issue=issue, status='IN_PROGRESS', actor=user, note="Department started work.")
+
+                IssueHistory.objects.create(
+                    issue=issue,
+                    status='IN_PROGRESS',
+                    actor=user,
+                    note="Department started work."
+                )
+
                 messages.success(request, "Work started!")
+
             return redirect('issue_detail', pk=pk)
 
-        # 'Complete': Move from In Progress -> Completed (requires uploading 'After' photo)
+        # Complete: In Progress -> Completed
         elif action == 'complete':
             if request.method == 'POST':
-                form = IssueCompleteForm(request.POST, request.FILES, instance=issue)
+                form = IssueCompleteForm(
+                    request.POST,
+                    request.FILES,
+                    instance=issue
+                )
+
                 if form.is_valid():
                     completed = form.save(commit=False)
                     completed.status = 'COMPLETED'
                     completed.save()
-                    IssueHistory.objects.create(issue=completed, status='COMPLETED', actor=user, note="Work finished. After photo uploaded.")
-                    messages.success(request, "Work marked as Completed. Awaiting final verification.")
+
+                    IssueHistory.objects.create(
+                        issue=completed,
+                        status='COMPLETED',
+                        actor=user,
+                        note="Work finished. After photo uploaded."
+                    )
+
+                    messages.success(
+                        request,
+                        "Work marked as Completed. Awaiting final verification."
+                    )
+
                     return redirect('issue_detail', pk=pk)
+
                 else:
-                    messages.error(request, "Please upload the Proof/After image.")
+                    messages.error(
+                        request,
+                        "Please upload the Proof/After image."
+                    )
+
             else:
                 form = IssueCompleteForm(instance=issue)
-            return render(request, 'reports/complete_issue.html', {'form': form, 'issue': issue})
+
+            return render(
+                request,
+                'reports/complete_issue.html',
+                {
+                    'form': form,
+                    'issue': issue
+                }
+            )
+
         else:
             messages.error(request, "Invalid action.")
             return redirect('issue_detail', pk=pk)
 
     # ACTIONS FOR CORPORATION USERS
     elif is_corp:
+
         if issue.status != 'COMPLETED':
-            messages.error(request, "Cannot verify — issue must be Completed first.")
+            messages.error(
+                request,
+                "Cannot verify — issue must be Completed first."
+            )
             return redirect('issue_detail', pk=pk)
 
         if request.method != 'POST':
             return redirect('issue_detail', pk=pk)
 
+        # APPROVE: Completed -> Resolved
         if action == 'approve':
             issue.status = 'RESOLVED'
             issue.save()
-            IssueHistory.objects.create(issue=issue, status='RESOLVED', actor=user, note="Corp approved the fix.")
-            messages.success(request, "Issue Resolved successfully!")
-        
+
+            # Award +10 Civic Points for resolving the issue
+            from reports.services.civic_points import award_resolution_points
+            award_resolution_points(issue)
+
+            IssueHistory.objects.create(
+                issue=issue,
+                status='RESOLVED',
+                actor=user,
+                note="Corp approved the fix."
+            )
+
+            messages.success(
+                request,
+                "Issue Resolved successfully!"
+            )
+
+        # REJECT: Completed -> Rejected
         elif action == 'reject':
             issue.status = 'REJECTED'
             issue.save()
-            IssueHistory.objects.create(issue=issue, status='REJECTED', actor=user, note="Corp rejected the fix for rework.")
-            messages.warning(request, "Fix rejected and sent back for re-work.")
+
+            IssueHistory.objects.create(
+                issue=issue,
+                status='REJECTED',
+                actor=user,
+                note="Corp rejected the fix for rework."
+            )
+
+            messages.warning(
+                request,
+                "Fix rejected and sent back for re-work."
+            )
+
         else:
             messages.error(request, "Invalid action.")
             return redirect('issue_detail', pk=pk)
-            
-    else:
-        messages.error(request, "You are not allowed to perform this action.")
-        return redirect('dashboard')
-            
-    return redirect('issue_detail', pk=pk)
 
+    else:
+        messages.error(
+            request,
+            "You are not allowed to perform this action."
+        )
+        return redirect('dashboard')
+
+    return redirect('issue_detail', pk=pk)
 # Allows Corporation to create new Working Departments.
 @login_required
 def create_ward(request):
@@ -577,26 +650,47 @@ def submit_review(request, pk):
     issue = get_object_or_404(Issue, pk=pk)
 
     if issue.status not in ['COMPLETED', 'RESOLVED']:
-        messages.error(request, "Reviews can only be submitted for completed or resolved issues.")
+        messages.error(
+            request,
+            "Reviews can only be submitted for completed or resolved issues."
+        )
         return redirect('issue_detail', pk=pk)
 
     if issue.user != request.user:
-        messages.error(request, "Only the citizen who reported this issue can submit a review.")
+        messages.error(
+            request,
+            "Only the citizen who reported this issue can submit a review."
+        )
         return redirect('issue_detail', pk=pk)
 
     if hasattr(issue, 'review'):
-        messages.info(request, "You have already submitted a review for this issue.")
+        messages.info(
+            request,
+            "You have already submitted a review for this issue."
+        )
         return redirect('issue_detail', pk=pk)
 
     if request.method == 'POST':
         form = IssueReviewForm(request.POST)
+
         if form.is_valid():
             review = form.save(commit=False)
             review.issue = issue
             review.reviewer = request.user
             review.save()
-            messages.success(request, "Thank you for your feedback! Your review has been submitted.")
+
+            # Award +5 Civic Points for submitting a review
+            from reports.services.civic_points import award_review_points
+            award_review_points(issue)
+
+            messages.success(
+                request,
+                "Thank you for your feedback! Your review has been submitted."
+            )
         else:
-            messages.error(request, "Please provide a valid rating to submit your review.")
+            messages.error(
+                request,
+                "Please provide a valid rating to submit your review."
+            )
 
     return redirect('issue_detail', pk=pk)
