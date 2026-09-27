@@ -1,0 +1,100 @@
+name: Civic Flow CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/platform-upgrade
+
+  pull_request:
+    branches:
+      - main
+      - feature/platform-upgrade
+
+jobs:
+
+  test:
+    name: Django Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: civic_flow_test
+          POSTGRES_USER: civic_user
+          POSTGRES_PASSWORD: civic_password
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd="pg_isready -U civic_user -d civic_flow_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      SECRET_KEY: test-secret-key
+      DEBUG: "False"
+
+      POSTGRES_DB: civic_flow_test
+      POSTGRES_USER: civic_user
+      POSTGRES_PASSWORD: civic_password
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+
+      AI_MODE: demo
+      AI_ENABLED: "False"
+      AI_AUTO_ASSIGN: "False"
+      AI_CONFIDENCE_THRESHOLD: "0.75"
+      AI_TIMEOUT_SECONDS: "10"
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Django system checks
+        run: |
+          python manage.py check
+
+      - name: Run migrations
+        run: |
+          python manage.py migrate --noinput
+
+      - name: Run tests
+        run: |
+          python manage.py test
+
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: civic-flow:ci
