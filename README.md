@@ -1,619 +1,713 @@
 # Civic Flow
 
-Civic Flow is a web-based civic issue reporting and management platform built with Django.
+## AI-Assisted Civic Issue Reporting and Management Platform
 
-Citizens can report civic problems, Corporation users can review and assign issues to the appropriate department, and Department users can work on assigned issues, upload proof of completion, and submit the work for Corporation verification.
+Civic Flow is a Django-based civic issue management platform that connects citizens, municipal corporations, and departments through a centralized reporting and resolution workflow.
 
-The platform also uses AI to recommend the appropriate department based on the reported issue.
+The platform allows citizens to report civic problems, corporations to review and manage reports, and departments to handle assigned issues. It also integrates Google Gemini for AI-assisted issue analysis while keeping final department assignment under human control.
 
 ---
 
-## Features
+## 🚀 Key Features
 
-### Citizen
+### 👤 Citizen
 
-- Create civic issue reports
-- Upload issue images
-- Provide issue location and description
-- Track issue status
-- View issue history and timeline
-- View assigned department
-- Submit reviews for completed/resolved issues
-- Earn Civic Points
+- Citizen registration and authentication
+- Submit civic issues
+- Add issue title and description
+- Upload photographs of reported problems
+- Provide issue location
+- Track submitted issues
+- View issue status
+- View AI-generated analysis
+- Citizen profile and civic points
 
-### Corporation
+### 🏢 Corporation
 
-- View all reported issues
-- Filter issues by status and department
-- Search issues
-- View complete issue details
-- View AI department recommendations
-- View AI confidence score and reasoning
-- Accept AI recommendations
-- Manually assign issues to departments
-- Reassign rejected issues
-- Verify completed work
-- Approve or reject department work
-- View citizen reviews
+- Corporation authentication
+- Corporation dashboard
+- View reported civic issues
+- Review issue details
+- Review AI department recommendations
+- Review AI confidence and reasoning
+- Assign issues to appropriate departments
+- Monitor issue progress
 
-### Department
+### 🏛️ Department
 
+- Department-specific authentication
+- Department dashboard
 - View issues assigned to the department
-- Start work on assigned issues
-- Upload an "After" image as proof
-- Mark issues as completed
-- Handle rejected issues and perform rework
+- Review issue information and images
+- Update issue status
+- Track department workload
 
-### AI Assistance
+---
 
-Civic Flow uses Google's Gemini API to analyze reported civic issues.
+## 🤖 AI-Assisted Issue Analysis
+
+Civic Flow integrates Google's Gemini API to assist with civic issue analysis.
 
 The AI can:
 
-- Detect the reported problem
 - Recommend an appropriate department
-- Provide a confidence score
+- Generate department confidence
 - Provide reasoning for the recommendation
-- Analyze whether the uploaded image is relevant to the reported issue
+- Determine whether an uploaded image is relevant to the complaint
+- Generate image relevance confidence
+- Detect the problem visible in the image
+- Store the AI analysis for later review
 
-AI recommendations are assistance only. The Corporation retains control over the final department assignment.
+### Human-Controlled Assignment
 
-### Civic Points
+The AI operates in **suggestion-only mode**.
 
-Citizens can earn Civic Points through participation in the civic reporting workflow.
+It does **not automatically assign or modify the department of an issue**.
+
+The Corporation user reviews the AI recommendation and remains responsible for the final department assignment.
+
+This design prevents an AI recommendation from directly changing the civic workflow.
 
 ---
-
-## Issue Workflow
+## 🏗️ System Architecture
 
 ```text
-Citizen Reports Issue
-        |
-        v
-     REPORTED
-        |
-        v
-AI Analysis / Department Recommendation
-        |
-        v
-Corporation Assigns Department
-        |
-        v
-     ASSIGNED
-        |
-        v
-Department Starts Work
-        |
-        v
-    IN_PROGRESS
-        |
-        v
-Department Uploads After Image
-        |
-        v
-     COMPLETED
-        |
-        v
-Corporation Verification
-       / \
-      /   \
-  Reject  Approve
-    |        |
-    v        v
-REJECTED   RESOLVED
-    |
-    v
-Department Reworks Issue
+                         ┌──────────────────┐
+                         │     Citizen      │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │  Django Web App  │
+                         └────────┬─────────┘
+                                  │
+              ┌───────────────────┼───────────────────┐
+              │                   │                   │
+              ▼                   ▼                   ▼
+        ┌───────────┐      ┌────────────┐      ┌─────────────┐
+        │ Citizen   │      │ Corporation│      │ Department  │
+        │ Workflow  │      │ Workflow   │      │ Workflow    │
+        └───────────┘      └─────┬──────┘      └─────────────┘
+                                 │
+                                 ▼
+                         ┌──────────────────┐
+                         │    Gemini AI     │
+                         │ Issue Analysis   │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │   PostgreSQL     │
+                         └──────────────────┘
+
+                    Containerized using Docker
+                              │
+                              ▼
+                    GitHub Actions CI/CD
+                              │
+                 ┌────────────┴────────────┐
+                 ▼                         ▼
+          Automated Tests            Docker Build
+                 │                         │
+                 └────────────┬────────────┘
+                              ▼
+                    GitHub Container
+                       Registry
 ```
 
----
+## 🛠️ Technology Stack
 
-## Technology Stack
+| Category | Technology |
+|---|---|
+| Backend | Django 5.2 |
+| Programming Language | Python 3.11 |
+| Database | PostgreSQL 17 |
+| AI | Google Gemini API |
+| ORM | Django ORM |
+| Frontend | Django Templates + Tailwind CSS |
+| Containerization | Docker |
+| Container Orchestration | Docker Compose |
+| CI/CD | GitHub Actions |
+| Container Registry | GitHub Container Registry |
+| Version Control | Git + GitHub |
 
-### Backend
-
-- Python
-- Django
-- Django ORM
-- PostgreSQL
-
-### Frontend
-
-- HTML
-- Tailwind CSS
-- JavaScript
-
-### AI
-
-- Google Gemini API
-- Gemini Flash model
-
-### Development Tools
-
-- Git
-- GitHub
-- VS Code
-- Python Virtual Environment
-
----
-
-## Project Structure
+## 📁 Project Structure
 
 ```text
 civic-flow/
 │
 ├── accounts/
-│   ├── migrations/
-│   ├── management/
-│   │   └── commands/
-│   │       └── create_demo_users.py
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── forms.py
 │   ├── models.py
-│   ├── tests.py
+│   ├── views.py
 │   ├── urls.py
-│   └── views.py
-│
-├── civic_flow/
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── urls.py
-│   ├── asgi.py
-│   └── wsgi.py
+│   └── management/
+│       └── commands/
+│           └── create_demo_users.py
 │
 ├── reports/
-│   ├── migrations/
-│   ├── services/
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── forms.py
 │   ├── models.py
-│   ├── tests.py
+│   ├── views.py
 │   ├── urls.py
-│   └── views.py
+│   ├── services/
+│   │   └── ai_service.py
+│   ├── tests_ai.py
+│   └── migrations/
 │
-├── media/
-├── static/
+├── civic_flow/
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+│
 ├── templates/
+├── static/
+├── media/
 │
-├── .env
-├── .env.example
-├── .gitignore
-├── db.sqlite3
-├── manage.py
-├── README.md
-└── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
+├── requirements.txt
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
+└── manage.py
 ```
 
----
+## 🐳 Running with Docker
 
-## User Roles
+### Prerequisites
 
-Civic Flow has three main user roles.
+Install:
 
-### 1. Citizen
+- Docker Desktop
+- Git
 
-Citizens can:
-
-- Register/login
-- Report civic issues
-- Upload images
-- Provide location and description
-- Track issue progress
-- View the issue timeline
-- View assigned department
-- Submit reviews
-- Earn Civic Points
-
-### 2. Corporation
-
-Corporation users manage the overall issue workflow.
-
-They can:
-
-- View reported issues
-- Review AI recommendations
-- Assign departments
-- Reassign issues
-- Verify completed work
-- Approve or reject department work
-
-### 3. Department
-
-Department users handle issues assigned to their department.
-
-They can:
-
-- View assigned issues
-- Start work
-- Upload proof of completion
-- Mark work as completed
-- Rework rejected issues
-
----
-
-## Installation
-
-### 1. Clone the Repository
+### Clone the repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-cd civic-flow
+git clone https://github.com/Niraj5430/Civic-Flow.git
+cd Civic-Flow
 ```
 
-Replace the repository URL with the actual GitHub repository URL.
-
----
-
-### 2. Create a Virtual Environment
-
-Windows:
-
-```powershell
-python -m venv .venv
-```
-
-Activate it:
-
-```powershell
-.\.venv\Scripts\activate
-```
-
----
-
-### 3. Install Dependencies
+### Start the application
 
 ```bash
-pip install -r requirements.txt
+docker compose up --build
 ```
 
----
-
-## Environment Variables
-
-Create a `.env` file in the project root.
-
-Example:
-
-```env
-POSTGRES_DB=civicflow
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_database_password
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-
-GEMINI_API_KEY=your_gemini_api_key
-```
-
-### Important
-
-Do not commit your real `.env` file to GitHub.
-
-The `.env` file should remain private.
-
-Use `.env.example` to show other developers which environment variables are required.
-
-Example:
-
-```env
-POSTGRES_DB=civicflow
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=change-me
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-
-GEMINI_API_KEY=your_gemini_api_key
-```
-
----
-
-## Database Setup
-
-Make sure PostgreSQL is installed and running.
-
-Create the database:
-
-```sql
-CREATE DATABASE civicflow;
-```
-
-Then run Django migrations:
-
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
----
-
-## Create an Admin User
-
-Create a Django superuser:
-
-```bash
-python manage.py createsuperuser
-```
-
-Follow the prompts to set:
-
-- Username
-- Email
-- Password
-
-Then start the development server:
-
-```bash
-python manage.py runserver
-```
-
-Open:
+The application will be available at:
 
 ```text
-http://127.0.0.1:8000/
+http://localhost:8000
 ```
 
-Admin panel:
+Django runs inside the web container and PostgreSQL runs inside a separate database container.
+
+## 🗄️ Database
+
+Civic Flow uses PostgreSQL as its primary database.
+
+Docker Compose provides the PostgreSQL container and the Django application connects to it using environment variables.
+
+Typical configuration:
 
 ```text
-http://127.0.0.1:8000/admin/
+POSTGRES_DB
+POSTGRES_USER
+POSTGRES_PASSWORD
+POSTGRES_HOST
+POSTGRES_PORT
 ```
 
----
+Django migrations can be applied using:
 
-## Demo Accounts
+```bash
+docker compose exec web python manage.py migrate
+```
 
-For development/testing, the project includes a management command that can create demo users.
+## 👥 Demo Accounts
+
+For demonstration and testing, the project includes a Django management command that creates the required groups, department, profiles, and demo users.
 
 Run:
 
 ```bash
-python manage.py create_demo_users
+docker compose exec web python manage.py create_demo_users
 ```
 
-This creates the required demo users and role configuration for testing the Citizen, Corporation, and Department workflows.
+This creates:
 
-### Important
+| Role | Username | Password |
+|---|---|---|
+| Citizen | `demo_citizen` | `DemoCitizen@123` |
+| Corporation | `demo_corporation` | `DemoCorporation@123` |
+| Department | `demo_department` | `DemoDepartment@123` |
 
-The demo accounts are intended for local development/testing only.
+The Department demo account is associated with:
 
-Change or remove demo passwords before deploying the project publicly.
+**Water Supply**
 
-If the command is not used, users can also be created manually through the Django admin panel.
+These credentials are intended only for local/demo testing.
 
----
+> **Security:** Real credentials, API keys, and secrets must never be committed to the repository.
 
-## Running the Project
+## 🧪 Testing
 
-Activate the virtual environment:
+Civic Flow includes automated Django tests for the AI functionality and AI analysis model.
 
-```powershell
-.\.venv\Scripts\activate
-```
+### Current tests cover
 
-Start the development server:
+- AI-disabled behavior
+- Missing Gemini API key handling
+- Successful AI classification
+- Department recommendation validation
+- Rejection of invalid/hallucinated department IDs
+- Gemini API exception handling
+- `IssueAIAnalysis` model creation
+
+Run the test suite locally:
 
 ```bash
-python manage.py runserver
+docker compose exec web python manage.py test
 ```
 
-Then open:
+The test suite is also executed automatically by GitHub Actions.
+
+## 🔄 CI/CD Pipeline
+
+Civic Flow implements a CI/CD pipeline using GitHub Actions.
+
+The workflow is defined in:
 
 ```text
-http://127.0.0.1:8000/
+.github/workflows/ci.yml
 ```
 
----
+The pipeline runs automatically when code is pushed or a pull request is created for the configured branches.
 
-## AI Configuration
+### Continuous Integration
 
-Civic Flow uses the Google Gemini API for AI-assisted issue analysis.
-
-The AI layer can provide:
-
-- Detected problem
-- Suggested department
-- Department confidence
-- Explanation/reasoning
-- Image relevance analysis
-
-The Gemini API key is configured through the `.env` file.
-
-Example:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key
-```
-
-The AI system is designed as a recommendation layer.
-
-The Corporation user makes the final department assignment.
-
----
-
-## AI Workflow
+The CI process performs the following steps:
 
 ```text
-Citizen Creates Report
-        |
-        v
-Issue Submitted
-        |
-        v
+Developer Push
+      │
+      ▼
+GitHub Actions
+      │
+      ▼
+Checkout Repository
+      │
+      ▼
+Setup Python 3.11
+      │
+      ▼
+Install Dependencies
+      │
+      ▼
+Django System Checks
+      │
+      ▼
+Run PostgreSQL 17
+      │
+      ▼
+Run Django Migrations
+      │
+      ▼
+Run Automated Tests
+```
+
+If the tests fail, the Docker publishing stage does not execute.
+
+## 🐳 Automated Docker Build
+
+After the Django test job succeeds, GitHub Actions automatically builds the Civic Flow Docker image.
+
+```text
+             Django Tests
+                  │
+                  │ PASS
+                  ▼
+           Docker Build
+                  │
+                  ▼
+        Docker Image Created
+                  │
+                  ▼
+      GitHub Container Registry
+```
+
+The Docker image is published to:
+
+```text
+ghcr.io/niraj5430/civic-flow
+```
+
+The workflow uses GitHub's built-in `GITHUB_TOKEN` for authentication with GitHub Container Registry.
+
+Docker images are tagged using the Git commit SHA, allowing a published image to be traced back to the source-code version that created it.
+
+## 🔁 CI/CD Workflow
+
+The complete pipeline can be summarized as:
+
+```text
+Developer
+    │
+    ▼
+Git Push
+    │
+    ▼
+GitHub Repository
+    │
+    ▼
+GitHub Actions
+    │
+    ├─────────────────────────┐
+    ▼                         ▼
+Django Tests              PostgreSQL
+    │
+    ▼
+Tests PASS
+    │
+    ▼
+Docker Build
+    │
+    ▼
+Docker Image
+    │
+    ▼
+GitHub Container Registry
+```
+
+This provides automated validation and container image delivery whenever the configured workflow is triggered.
+
+## 🤖 AI Service Architecture
+
+The AI functionality is implemented in:
+
+```text
+reports/services/ai_service.py
+```
+
+The service:
+
+- Retrieves available departments from PostgreSQL.
+- Sends the civic issue information to Gemini.
+- Includes the uploaded image when available.
+- Requests structured JSON output.
+- Validates the returned department ID.
+- Normalizes confidence values.
+- Stores the analysis in `IssueAIAnalysis`.
+- Handles API and processing failures safely.
+
+The AI does not directly modify the issue's assigned department.
+
+## 🔐 AI Validation
+
+Civic Flow does not blindly trust the AI response.
+
+The returned department ID is checked against the actual departments available in the database.
+
+For example:
+
+### Database Departments
+
+```text
+1 → Roads Department
+2 → Water Department
+3 → Cleaning Department
+```
+
+If the AI returns:
+
+```text
+department_id = 99999
+```
+
+the response is rejected because that department does not exist in the database.
+
+The system also handles:
+
+- Missing Gemini API keys
+- API failures
+- Invalid department IDs
+- Invalid AI responses
+- Image loading errors
+- Other AI processing exceptions
+
+Failed analyses are recorded without crashing the main application workflow.
+
+## ⚙️ Environment Variables
+
+Sensitive configuration is supplied through environment variables.
+
+Example configuration:
+
+```text
+SECRET_KEY
+DEBUG
+
+POSTGRES_DB
+POSTGRES_USER
+POSTGRES_PASSWORD
+POSTGRES_HOST
+POSTGRES_PORT
+
+GEMINI_API_KEY
+AI_MODE
+AI_ENABLED
+AI_AUTO_ASSIGN
+AI_MODEL
+AI_CONFIDENCE_THRESHOLD
+AI_TIMEOUT_SECONDS
+```
+
+> **Security:** The Gemini API key must never be committed to GitHub.
+
+## 🧠 AI Configuration
+
+Example configuration:
+
+```text
+AI_MODE=demo
+AI_ENABLED=True
+AI_AUTO_ASSIGN=False
+AI_CONFIDENCE_THRESHOLD=0.75
+AI_TIMEOUT_SECONDS=10
+```
+
+The important setting is:
+
+```text
+AI_AUTO_ASSIGN=False
+```
+
+This keeps the AI in suggestion-only mode.
+
+The Corporation user reviews the recommendation and makes the final assignment.
+
+## 🔄 Civic Issue Workflow
+
+```text
+Citizen
+   │
+   ▼
+Submit Civic Issue
+   │
+   ├── Title
+   ├── Description
+   ├── Location
+   └── Image
+   │
+   ▼
+PostgreSQL
+   │
+   ▼
 Gemini AI Analysis
-        |
-        +----> Detect Problem
-        |
-        +----> Suggest Department
-        |
-        +----> Confidence Score
-        |
-        +----> Reasoning
-        |
-        +----> Image Relevance
-        |
-        v
-Corporation Reviews Recommendation
-        |
-        v
-Final Department Assignment
+   │
+   ├── Department Recommendation
+   ├── Department Confidence
+   ├── Department Reasoning
+   ├── Image Relevance
+   ├── Image Confidence
+   └── Detected Problem
+   │
+   ▼
+Corporation Review
+   │
+   ▼
+Department Assignment
+   │
+   ▼
+Department Handles Issue
+   │
+   ▼
+Status Updates
+   │
+   ▼
+Issue Resolution
 ```
 
----
+## 🐳 Docker Services
 
-## Civic Points
+Docker Compose runs Civic Flow using two primary services.
 
-Civic Flow includes a Civic Points system for citizen participation.
+### Web
 
-The user's Civic Points are stored in the account profile.
+**`civic_flow_web`**
 
-Points can be used to represent participation and engagement within the civic reporting workflow.
+Runs the Django application.
 
----
+### Database
 
-## Issue Statuses
+**`civic_flow_db`**
 
-The application uses the following main issue statuses:
+Runs PostgreSQL 17.
 
-| Status | Description |
-|---|---|
-| `REPORTED` | Citizen has submitted the issue |
-| `ASSIGNED` | Corporation has assigned the issue to a department |
-| `IN_PROGRESS` | Department has started working on the issue |
-| `COMPLETED` | Department has completed the work and submitted proof |
-| `RESOLVED` | Corporation has verified and approved the work |
-| `REJECTED` | Corporation rejected the submitted work and requested rework |
+### Architecture
 
----
+```text
+┌─────────────────────────────┐
+│       civic_flow_web        │
+│                             │
+│       Django 5.2            │
+│       Python 3.11           │
+└──────────────┬──────────────┘
+               │
+               │ PostgreSQL
+               ▼
+┌─────────────────────────────┐
+│        civic_flow_db        │
+│                             │
+│       PostgreSQL 17         │
+└─────────────────────────────┘
+```
 
-## Issue History
-
-Each important workflow action is recorded in the issue history.
-
-Examples include:
-
-- Issue reported
-- Department assigned
-- Work started
-- Work completed
-- Issue rejected
-- Issue resolved
-
-This provides a transparency timeline that allows citizens and administrators to track the progress of an issue.
-
----
-
-## Image Uploads
-
-Citizens can upload an image showing the reported problem.
-
-Departments can upload an "After" image as proof that the issue has been addressed.
-
-Uploaded media is stored through Django's media configuration.
-
-For production deployments, configure appropriate persistent media storage.
-
----
-
-
-
-## Development
-
-Useful Django commands:
-
-### Create migrations
+### Check containers
 
 ```bash
-python manage.py makemigrations
+docker compose ps
+```
+
+### Start the application
+
+```bash
+docker compose up
+```
+
+### Start with a fresh image build
+
+```bash
+docker compose up --build
+```
+
+### Stop containers
+
+```bash
+docker compose down
+```
+
+## 📋 Development Commands
+
+### Check Django configuration
+
+```bash
+docker compose exec web python manage.py check
 ```
 
 ### Apply migrations
 
 ```bash
-python manage.py migrate
-```
-
-### Create superuser
-
-```bash
-python manage.py createsuperuser
-```
-
-### Run development server
-
-```bash
-python manage.py runserver
-```
-
-### Check Django configuration
-
-```bash
-python manage.py check
+docker compose exec web python manage.py migrate
 ```
 
 ### Run tests
 
 ```bash
-python manage.py test
+docker compose exec web python manage.py test
 ```
 
----
+### Create a superuser
 
+```bash
+docker compose exec web python manage.py createsuperuser
+```
 
-## Current Development Status
+### Create demo users
 
-The core Civic Flow workflow is implemented:
+```bash
+docker compose exec web python manage.py create_demo_users
+```
 
+### Open Django shell
+
+```bash
+docker compose exec web python manage.py shell
+```
+
+## 📊 Project Highlights
+
+### Application
+
+- Role-based authentication
 - Citizen issue reporting
-- Issue tracking
 - Corporation dashboard
 - Department dashboard
-- Department assignment
+- Civic issue tracking
+- Image uploads
+- Issue status management
+- Citizen profiles
+- Civic points
+
+### AI
+
+- Gemini API integration
 - AI department recommendation
-- AI confidence and reasoning
-- Issue status workflow
-- Department work workflow
-- After-image proof
-- Corporation verification
-- Issue rejection and rework
-- Issue history/timeline
-- Citizen reviews
-- Civic Points
-- User profiles
-- Role-based access
+- Department confidence
+- AI reasoning
+- Image relevance analysis
+- Image confidence
+- Problem detection
+- AI response validation
+- Failure handling
+- Human-controlled assignment
 
----
+### DevOps
 
-## Future Improvements
+- PostgreSQL
+- Docker
+- Docker Compose
+- Automated Django tests
+- GitHub Actions
+- CI/CD pipeline
+- Docker image build automation
+- GitHub Container Registry
+- Commit-based Docker image tagging
+
+## 🚀 Future Improvements
 
 Possible future improvements include:
 
-- Notifications
-- Email alerts
-- Real-time issue updates
-- Civic Points leaderboard
-- More detailed analytics
-- Location-based issue hotspots
-- Advanced AI image analysis
-- Production cloud deployment
-- Automated testing expansion
-- API development
-- Mobile application
+- Production deployment
+- Cloud object storage for uploaded images
+- Geographic issue hotspot visualization
+- Email and notification system
+- More comprehensive end-to-end testing
+- Application monitoring
+- Centralized logging
+- Automated production deployment
 
----
+## 👨‍💻 Author
 
-## License
+**Niraj Sharma**
 
-This project is currently intended for educational, portfolio, and development purposes.
+Civic Flow demonstrates the integration of:
 
-Add an appropriate open-source license before distributing the project under a formal open-source license.
+```text
+Django
++
+PostgreSQL
++
+Google Gemini AI
++
+Docker
++
+Docker Compose
++
+Automated Testing
++
+GitHub Actions
++
+CI/CD
++
+GitHub Container Registry
+```
 
----
+The project was developed as a portfolio project demonstrating full-stack development, AI integration, containerization, automated testing, and DevOps practices.
 
-## Author
+## 📄 License
 
-Civic Flow
-
-Built with Django, PostgreSQL, Tailwind CSS, and Google Gemini AI.
+This project is intended for educational, demonstration, and portfolio purposes.
